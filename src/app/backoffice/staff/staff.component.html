@@ -1,0 +1,235 @@
+<section class="page">
+  <div class="head">
+    <div class="left">
+      <button class="btn btn--ghost" type="button" (click)="back()">← Indietro</button>
+      <div>
+        <h1>Staff</h1>
+        <p>Elenco persone, ruoli e rappresentanze</p>
+      </div>
+    </div>
+
+    <ng-container *ngIf="isDirettivo$ | async">
+      <button class="btn btn--primary" type="button" (click)="openCreate()">
+        + Nuova persona
+      </button>
+    </ng-container>
+  </div>
+
+  <div class="filters">
+    <div class="field">
+      <span>Dipartimento</span>
+      <select [formControl]="filterForm.controls.dipartimentoId">
+        <option value="">Tutti</option>
+        <option *ngFor="let d of dipartimenti" [value]="d.id">
+          {{ d.nome }}{{ d.codice ? ' (' + d.codice + ')' : '' }}
+        </option>
+      </select>
+    </div>
+
+    <div class="field">
+      <span>Corso di studi</span>
+      <select [formControl]="filterForm.controls.corsoId">
+        <option value="">Tutti</option>
+        <option *ngFor="let c of corsi" [value]="c.id">
+          {{ c.nome }} • {{ TIPO_CORSO_LABEL[c.tipoCorso!] || c.tipoCorso || '' }}
+        </option>
+      </select>
+    </div>
+
+    <div class="field">
+      <span>Anno</span>
+      <select [formControl]="filterForm.controls.anno">
+        <option value="">Tutti</option>
+        <option *ngFor="let a of anni" [value]="a">{{ a }}</option>
+      </select>
+    </div>
+
+    <div class="field grow">
+      <span>Cerca</span>
+      <input [formControl]="filterForm.controls.search" placeholder="Nome, ruolo, corso..." />
+    </div>
+  </div>
+
+  <div class="error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <div class="grid" *ngIf="!loading; else loadingTpl">
+    <ng-container *ngIf="(filtered$ | async) as list">
+      <article class="card card--ig" *ngFor="let s of list">
+        <!-- FOTO -->
+        <div class="ig__media">
+          <img
+            *ngIf="photoSrc(s) as src"
+            class="ig__img"
+            [src]="src"
+            (error)="onImgError(s)"
+            alt="Foto {{ s.nome }} {{ s.cognome }}"
+          />
+
+          <div class="ig__placeholder" *ngIf="!photoSrc(s)">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 12c2.76 0 5-2.46 5-5.5S14.76 1 12 1 7 3.46 7 6.5 9.24 12 12 12Zm0 2c-4.42 0-8 2.69-8 6v2h16v-2c0-3.31-3.58-6-8-6Z"
+              />
+            </svg>
+          </div>
+        </div>
+
+        <!-- CONTENUTO -->
+        <div class="ig__body">
+          <h3 class="ig__name">{{ s.nome }} {{ s.cognome }}</h3>
+
+          <div class="ig__details">
+            <div class="ig__line" *ngIf="s.corsoDiStudi">
+              <span class="ig__strong">{{ s.corsoDiStudi.nome }}</span>
+              <span class="ig__muted" *ngIf="s.annoCorso"> • Anno {{ s.annoCorso }}</span>
+            </div>
+
+            <div class="ig__line ig__muted" *ngIf="s.corsoDiStudi?.dipartimento?.nome">
+              {{ s.corsoDiStudi?.dipartimento?.nome }}
+              <span *ngIf="s.corsoDiStudi?.dipartimento?.codice">
+                ({{ s.corsoDiStudi?.dipartimento?.codice }})
+              </span>
+            </div>
+          </div>
+
+          <!-- BADGES -->
+          <div class="ig__badges" *ngIf="s.direttivoRuoli?.length">
+            <span class="pill pill--dir" *ngFor="let r of s.direttivoRuoli" [title]="r">{{ r }}</span>
+          </div>
+
+          <div class="ig__badges" *ngIf="s.rappresentanze?.length">
+            <span class="pill pill--rep" *ngFor="let r of s.rappresentanze" [title]="r">{{ r }}</span>
+          </div>
+
+          <!-- FOOTER BOTTONI -->
+          <div class="ig__footer">
+            <ng-container *ngIf="(vm$ | async) as vm">
+              <ng-container *ngIf="canManageCard(s, vm.me, vm.isDir)">
+
+                <!-- Direttivo: Modifica / Utente: Cambia foto -->
+                <button class="btn btn--ghost" type="button" (click)="openEdit(s, vm.me, vm.isDir)">
+                  {{ vm.isDir ? 'Modifica' : 'Cambia foto' }}
+                </button>
+
+                <!-- Elimina SOLO per direttivo -->
+                <button
+                  *ngIf="vm.isDir"
+                  class="btn btn--danger"
+                  type="button"
+                  (click)="delete(s)"
+                >
+                  Elimina
+                </button>
+
+              </ng-container>
+            </ng-container>
+          </div>
+        </div>
+      </article>
+    </ng-container>
+  </div>
+
+  <ng-template #loadingTpl>
+    <div class="loading">Caricamento…</div>
+  </ng-template>
+</section>
+
+<!-- MODAL CREATE PERSONA -->
+<div class="modal" *ngIf="modalOpen">
+  <div class="modal__panel" (click)="$event.stopPropagation()">
+    <div class="modal__head">
+      <h2>Nuova persona</h2>
+      <button class="x" type="button" (click)="closeModal()">×</button>
+    </div>
+
+    <form class="form" [formGroup]="createForm" (ngSubmit)="saveCreate()">
+      <label class="field" [class.invalid]="createForm.controls.nome.touched && createForm.controls.nome.invalid">
+        <span>Nome</span>
+        <input formControlName="nome" placeholder="Es. Mario" />
+      </label>
+
+      <label class="field" [class.invalid]="createForm.controls.cognome.touched && createForm.controls.cognome.invalid">
+        <span>Cognome</span>
+        <input formControlName="cognome" placeholder="Es. Rossi" />
+      </label>
+
+      <label class="field" [class.invalid]="createForm.controls.email.touched && createForm.controls.email.invalid">
+        <span>Email</span>
+        <input formControlName="email" placeholder="nome.cognome@email.it" />
+      </label>
+
+      <label
+        class="field"
+        [class.invalid]="createForm.controls.dipartimentoId.touched && createForm.controls.dipartimentoId.invalid"
+      >
+        <span>Dipartimento</span>
+        <select formControlName="dipartimentoId">
+          <option [ngValue]="null">Seleziona…</option>
+          <option *ngFor="let d of dipList" [ngValue]="d.id">
+            {{ d.nome }} ({{ d.codice }})
+          </option>
+        </select>
+      </label>
+
+      <label
+        class="field"
+        *ngIf="createForm.controls.dipartimentoId.value"
+        [class.invalid]="createForm.controls.corsoDiStudiId.touched && createForm.controls.corsoDiStudiId.invalid"
+      >
+        <span>Corso di studi</span>
+        <select formControlName="corsoDiStudiId">
+          <option [ngValue]="null">Seleziona…</option>
+          <option *ngFor="let c of corsiList" [ngValue]="c.id">
+            {{ c.nome }} • {{ TIPO_CORSO_LABEL[c.tipoCorso] || c.tipoCorso }}
+          </option>
+        </select>
+
+        <small class="hint" *ngIf="corsiLoading">Caricamento corsi…</small>
+        <small class="hint" *ngIf="!corsiLoading && corsiList.length === 0">
+          Nessun corso disponibile per questo dipartimento.
+        </small>
+      </label>
+
+      <div class="info" *ngIf="selectedCorso?.tipoCorso as tc">
+        <span class="info__label">Tipo corso</span>
+        <span class="pill pill--type" [title]="TIPO_CORSO_LABEL[tc] || tc">
+          {{ TIPO_CORSO_LABEL[tc] || tc }}
+        </span>
+      </div>
+
+      <label class="field">
+        <span>Anno di corso</span>
+        <input type="number" formControlName="annoCorso" placeholder="Es. 1" min="1" max="10" />
+      </label>
+
+      <label class="check">
+        <input type="checkbox" formControlName="staff" />
+        <span>È staff</span>
+      </label>
+
+      <div class="modal__actions">
+        <button class="btn btn--ghost" type="button" (click)="closeModal()">Annulla</button>
+
+        <button
+          class="btn btn--primary"
+          type="submit"
+          [disabled]="saving || corsiLoading || createForm.invalid || !createForm.controls.corsoDiStudiId.value"
+        >
+          {{ saving ? 'Creazione…' : 'Crea' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal__backdrop" (click)="closeModal()"></div>
+</div>
+
+<app-staff-edit-modal
+  *ngIf="editOpen && editPersona"
+  [persona]="editPersona!"
+  [me]="editMe"
+  [isDir]="editIsDir"
+  (closed)="closeEdit()"
+  (saved)="onEditSaved()"
+></app-staff-edit-modal>
+

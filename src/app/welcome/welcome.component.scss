@@ -1,0 +1,117 @@
+:host {
+  --impronta-blue: #2f5bff;
+  --ink: #10122a;
+  --line: rgba(16, 18, 42, 0.10);
+}
+
+.welcome {
+  min-height: calc(100vh - 72px); /* header */
+  display: grid;
+  place-items: center;
+  padding: 28px 16px;
+}
+
+.welcome__card {
+  width: min(720px, 100%);
+  background: rgba(255,255,255,.75);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 26px 22px;
+  box-shadow: 0 24px 80px rgba(16, 18, 42, 0.12);
+  backdrop-filter: blur(10px);
+  text-align: center;
+}
+
+.welcome__logoWrap {
+  display: grid;
+  place-items: center;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.welcome__logo {
+  width: 92px;
+  height: 92px;
+  object-fit: contain;
+
+  /* ✅ animazione “entra scorrendo” */
+  animation: slideIn 700ms ease-out both;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.welcome__title {
+  margin: 8px 0 4px;
+  font-size: 28px;
+  letter-spacing: .2px;
+  color: var(--ink);
+}
+
+.welcome__subtitle {
+  margin: 0 0 14px;
+  font-weight: 700;
+  color: rgba(16, 18, 42, .62);
+}
+
+.welcome__text {
+  margin: 0 auto 18px;
+  max-width: 540px;
+  color: rgba(16, 18, 42, .75);
+  line-height: 1.5;
+}
+
+.welcome__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.btn {
+  padding: 10px 14px;
+  border-radius: 14px;
+  text-decoration: none;
+  font-weight: 800;
+  border: 1px solid rgba(16, 18, 42, 0.12);
+  color: var(--ink);
+  background: rgba(255,255,255,.7);
+}
+
+.btn--primary {
+  background: var(--impronta-blue);
+  color: #fff;
+  border-color: rgba(47, 91, 255, .35);
+}
+
+.btn--primary:hover { filter: brightness(1.03); }
+
+.btn--ghost {
+  background: rgba(255,255,255,.55);
+}
+
+.welcome__foot {
+  margin-top: 16px;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  color: rgba(16,18,42,.55);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(47, 91, 255, .55);
+}

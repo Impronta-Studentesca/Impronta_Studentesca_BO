@@ -1,0 +1,87 @@
+<header class="app-header">
+  <div class="container">
+    <!-- Brand -->
+    <a class="brand" routerLink="/" (click)="closeMenu()">
+      <img class="brand__logo" src="/logo%20rotondo.png" alt="Impronta Studentesca" />
+
+      <div class="brand__text">
+        <div class="brand__title">
+          Impronta Studentesca
+          <span class="brand__user" *ngIf="(user$ | async) as u">· {{ u.nome }} {{ u.cognome }}</span>
+        </div>
+        <div class="brand__subtitle">Backoffice</div>
+      </div>
+    </a>
+
+    <!-- DESTRA: se NON loggato mostra solo Login -->
+    <ng-container *ngIf="!(isLoggedIn$ | async); else loggedArea">
+      <a class="login-link" routerLink="/login">Login</a>
+    </ng-container>
+
+    <!-- Area loggato -->
+    <ng-template #loggedArea>
+      <!-- Burger -->
+      <button
+        class="burger"
+        type="button"
+        aria-label="Apri menu"
+        [attr.aria-expanded]="menuOpen"
+        aria-controls="primary-nav"
+        (click)="toggleMenu()"
+      >
+        <span class="burger__bar"></span>
+        <span class="burger__bar"></span>
+        <span class="burger__bar"></span>
+      </button>
+
+      <!-- Nav -->
+      <nav
+        id="primary-nav"
+        class="nav"
+        [class.nav--open]="menuOpen"
+        (click)="$event.stopPropagation()"
+      >
+        <a class="nav__link"
+           routerLink="/backoffice/dashboard"
+           routerLinkActive="is-active"
+           [routerLinkActiveOptions]="{ exact: true }"
+           (click)="onNavItemClick()">
+          Dashboard
+        </a>
+
+        <a class="nav__link"
+           routerLink="/backoffice/dipartimenti"
+           routerLinkActive="is-active"
+           (click)="onNavItemClick()">
+          Dipartimenti
+        </a>
+
+        <a class="nav__link"
+           routerLink="/backoffice/staff"
+           routerLinkActive="is-active"
+           (click)="onNavItemClick()">
+          Staff
+        </a>
+
+        <a class="nav__link"
+           routerLink="/backoffice/impostazioni"
+           routerLinkActive="is-active"
+           (click)="onNavItemClick()">
+          Impostazioni
+        </a>
+
+        <div class="nav__divider"></div>
+
+        <button class="nav__cta" type="button" (click)="logout()">
+          Esci
+        </button>
+      </nav>
+    </ng-template>
+  </div>
+
+  <!-- Backdrop solo quando loggato e menu aperto -->
+  <div class="backdrop"
+       *ngIf="(isLoggedIn$ | async) && menuOpen"
+       (click)="closeMenu()"
+       aria-hidden="true"></div>
+</header>

@@ -1,0 +1,70 @@
+<section class="page">
+  <div class="head">
+    <div>
+      <h1>Dipartimenti</h1>
+      <p>Seleziona un dipartimento per visualizzare i corsi di studio.</p>
+    </div>
+
+    <ng-container *ngIf="isDirettivo$ | async">
+      <button class="btn btn--primary" type="button" (click)="openCreate()">
+        + Nuovo dipartimento
+      </button>
+    </ng-container>
+  </div>
+
+  <div class="error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <div class="grid" *ngIf="!loading; else loadingTpl">
+    <article class="card" *ngFor="let d of dipartimenti" (click)="openCorsi(d)">
+      <div class="card__content">
+        <div class="card__header">
+          <h3 class="card__name">{{ d.nome }}</h3>
+          <span class="pill">{{ d.codice }}</span>
+        </div>
+
+      </div>
+
+      <ng-container *ngIf="isDirettivo$ | async">
+        <div class="card__footer" (click)="$event.stopPropagation()">
+          <button class="btn btn--ghost" type="button" (click)="openEdit(d)">Modifica</button>
+          <button class="btn btn--danger" type="button" (click)="delete(d)">Elimina</button>
+        </div>
+      </ng-container>
+    </article>
+  </div>
+
+  <ng-template #loadingTpl>
+    <div class="loading">Caricamento…</div>
+  </ng-template>
+
+  <!-- MODAL create/edit -->
+  <div class="modal" *ngIf="modalOpen">
+    <div class="modal__panel" (click)="$event.stopPropagation()">
+      <div class="modal__head">
+        <h2>{{ editing ? 'Modifica dipartimento' : 'Nuovo dipartimento' }}</h2>
+        <button class="x" type="button" (click)="closeModal()">×</button>
+      </div>
+
+      <form class="form" [formGroup]="form" (ngSubmit)="save()">
+        <label class="field">
+          <span>Nome</span>
+          <input formControlName="nome" placeholder="Es. Scienze della Formazione" />
+        </label>
+
+        <label class="field">
+          <span>Codice</span>
+          <input formControlName="codice" placeholder="Es. SPF" />
+        </label>
+
+        <div class="modal__actions">
+          <button class="btn btn--ghost" type="button" (click)="closeModal()">Annulla</button>
+          <button class="btn btn--primary" type="submit" [disabled]="loading">
+            {{ editing ? 'Salva' : 'Crea' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal__backdrop" (click)="closeModal()"></div>
+  </div>
+</section>

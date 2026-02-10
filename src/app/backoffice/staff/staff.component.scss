@@ -1,0 +1,378 @@
+.page { padding: 18px; }
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+
+  h1 { margin: 0; }
+  p { margin: 6px 0 0; opacity: .75; }
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 220px 260px 140px 1fr;
+  gap: 10px;
+  margin: 12px 0 14px;
+  align-items: end;
+
+  .field span {
+    display: block;
+    font-weight: 900;
+    margin-bottom: 6px;
+    opacity: .85;
+  }
+
+  select, input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(16,18,42,.12);
+    background: rgba(255,255,255,.92);
+  }
+
+  .grow { grid-column: 4 / span 1; }
+}
+
+@media (max-width: 1100px) {
+  .filters { grid-template-columns: 1fr 1fr; }
+  .filters .grow { grid-column: auto; }
+  .left { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
+
+/* GRID: CARD STRETTE + CENTRATE */
+.grid {
+  display: grid;
+  gap: 12px;
+  justify-content: center;
+  align-items: stretch;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 280px));
+}
+
+/* BASE CARD (se ti serve altrove) */
+.card {
+  background: rgba(255,255,255,.86);
+  border: 1px solid rgba(16,18,42,.10);
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 14px 40px rgba(16,18,42,.10);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ---------- IG CARD STYLE ---------- */
+.card--ig {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 280px;
+  height: 100%;
+
+  /* ✅ FIX: serve per allineare i bottoni alla stessa altezza */
+  display: flex;
+  flex-direction: column;
+}
+
+.ig__media {
+  position: relative;
+  width: 100%;
+  background: rgba(255,255,255,.7);
+  border-bottom: 1px solid rgba(16,18,42,.10);
+  display: grid;
+  place-items: center;
+
+  aspect-ratio: 16 / 10;
+  max-height: 180px;
+}
+
+@media (max-width: 700px) {
+  .ig__media { max-height: 160px; }
+}
+
+.ig__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ig__placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.ig__placeholder svg {
+  width: 46px;
+  height: 46px;
+  opacity: .55;
+  fill: rgba(16,18,42,.85);
+}
+
+.ig__body {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  /* ✅ FIX: il body deve riempire lo spazio rimasto,
+     così il footer può andare sempre in fondo */
+  flex: 1;
+  min-height: 0;
+}
+
+.ig__name {
+  margin: 0;
+  font-weight: 950;
+  font-size: 16px;
+  line-height: 1.15;
+  text-align: left;
+  word-break: break-word;
+}
+
+.ig__details {
+  display: grid;
+  gap: 6px;
+}
+
+.ig__line {
+  font-weight: 850;
+  font-size: 12px;
+  opacity: .85;
+}
+
+.ig__strong { font-weight: 950; }
+.ig__muted  { opacity: .7; font-weight: 800; }
+
+.ig__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ig__footer {
+  /* ✅ FIX: spinge sempre i bottoni in basso */
+  margin-top: auto;
+
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 6px;
+}
+
+/* PILL */
+.pill {
+  font-size: 11px;
+  font-weight: 900;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(16,18,42,.12);
+  background: rgba(16,18,42,.06);
+  color: rgba(16,18,42,.85);
+
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pill--dir {
+  border-color: rgba(47,91,255,.22);
+  background: rgba(47,91,255,.10);
+}
+
+.pill--rep {
+  border-color: rgba(0, 150, 136, .25);
+  background: rgba(0, 150, 136, .10);
+}
+
+/* BOTTONI */
+.btn {
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(16,18,42,.12);
+  background: rgba(255,255,255,.65);
+  font-weight: 850;
+  cursor: pointer;
+}
+
+/* VISIVO "SPENTO" */
+.btn:disabled,
+.btn[disabled] {
+  opacity: .45;
+  cursor: not-allowed;
+  filter: grayscale(20%);
+  pointer-events: none;
+}
+
+.btn--primary {
+  background: #2f5bff;
+  color: #fff;
+  border-color: rgba(47,91,255,.35);
+}
+
+.btn--ghost { background: rgba(255,255,255,.55); }
+
+.btn--danger {
+  background: rgba(229,57,53,.10);
+  border-color: rgba(229,57,53,.30);
+  color: #b71c1c;
+}
+
+.error {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(229,57,53,.30);
+  background: rgba(229,57,53,.08);
+  color: #b71c1c;
+  font-weight: 800;
+}
+
+.loading { padding: 18px; font-weight: 800; opacity: .75; }
+
+/* MODAL */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  z-index: 60;
+}
+
+.modal__panel {
+  position: relative;
+  z-index: 61;
+
+  width: min(520px, calc(100% - 24px));
+  margin: 0;
+  max-height: min(85vh, 720px);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid rgba(16,18,42,.12);
+  box-shadow: 0 24px 80px rgba(0,0,0,.25);
+  padding: 14px;
+}
+
+.modal__head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(16,18,42,.08);
+
+  h2 { margin: 0; font-size: 18px; }
+}
+
+.x {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(16,18,42,.12);
+  background: rgba(255,255,255,.7);
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.form { margin-top: 0; display: grid; gap: 12px; }
+
+.field span { display: block; font-weight: 900; margin-bottom: 6px; }
+
+.field input, .field select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(16,18,42,.12);
+  background: rgba(255,255,255,.95);
+}
+
+/* DISABLED SELECT LOOK */
+.field select:disabled {
+  opacity: .65;
+  cursor: not-allowed;
+}
+
+/* INVALID LOOK */
+.field.invalid input,
+.field.invalid select {
+  border-color: rgba(229,57,53,.45);
+  background: rgba(229,57,53,.04);
+}
+
+.hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: .75;
+  font-weight: 800;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 900;
+  opacity: .85;
+}
+
+.check--readonly { opacity: .75; }
+.check--readonly input { cursor: not-allowed; }
+
+.modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+@media (max-height: 700px) {
+  .modal__panel { max-height: 90vh; }
+}
+
+.info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.info__label {
+  font-weight: 900;
+  opacity: .8;
+}
+
+/* pill dedicata al tipo corso */
+.pill--type {
+  border-color: rgba(255, 193, 7, .35);
+  background: rgba(255, 193, 7, .12);
+}

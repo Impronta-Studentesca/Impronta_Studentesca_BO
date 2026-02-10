@@ -1,0 +1,72 @@
+<div class="login-page">
+  <div class="card">
+    <div class="card__header">
+      <h1>Accedi</h1>
+      <p>Area Backoffice Impronta Studentesca</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form">
+      <label class="field">
+        <span>Email</span>
+        <input type="email" formControlName="email" placeholder="nome@email.it" autocomplete="username" />
+        <small class="error" *ngIf="form.controls.email.touched && form.controls.email.invalid">
+          Inserisci una email valida.
+        </small>
+      </label>
+
+      <label class="field">
+        <span>Password</span>
+        <input type="password" formControlName="password" placeholder="••••••••" autocomplete="current-password" />
+        <small class="error" *ngIf="form.controls.password.touched && form.controls.password.invalid">
+          Inserisci la password.
+        </small>
+      </label>
+
+      <div class="error-banner" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+      <button class="btn" type="submit" [disabled]="loading">
+        {{ loading ? 'Accesso in corso…' : 'Login' }}
+      </button>
+    </form>
+
+    <div class="card__footer">
+      <a routerLink="/" class="link">Torna alla home</a>
+    </div>
+  </div>
+</div>
+<div class="login-page">
+  <div class="card">
+    <div class="card__header">
+      <h1>Accedi</h1>
+      <p>Area Backoffice Impronta Studentesca</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form">
+      <label class="field">
+        <span>Email</span>
+        <input type="email" formControlName="email" placeholder="nome@email.it" autocomplete="username" />
+        <small class="error" *ngIf="form.controls.email.touched && form.controls.email.invalid">
+          Inserisci una email valida.
+        </small>
+      </label>
+
+      <label class="field">
+        <span>Password</span>
+        <input type="password" formControlName="password" placeholder="••••••••" autocomplete="current-password" />
+        <small class="error" *ngIf="form.controls.password.touched && form.controls.password.invalid">
+          Inserisci la password.
+        </small>
+      </label>
+
+      <div class="error-banner" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+      <button class="btn" type="submit" [disabled]="loading">
+        {{ loading ? 'Accesso in corso…' : 'Login' }}
+      </button>
+    </form>
+
+    <div class="card__footer">
+      <a routerLink="/" class="link">Torna alla home</a>
+    </div>
+  </div>
+</div>
