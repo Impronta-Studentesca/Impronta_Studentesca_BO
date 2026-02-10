@@ -32,7 +32,7 @@ export class StaffService {
 
   /** POST /staff/persona/{id}/photo (upload foto) */
   uploadPersonaPhoto(personaId: number, file: File): Observable<void> {
-    const url = apiUrl(environment.api.staffPath, `persona/${personaId}/photo`);
+    const url = apiUrl(environment.api.staffPath, `persona/${personaId}/foto`);
     const fd = new FormData();
     fd.append('file', file);
     return this.http.post<void>(url, fd, { withCredentials: true });

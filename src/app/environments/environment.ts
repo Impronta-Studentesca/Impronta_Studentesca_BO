@@ -20,8 +20,8 @@ export const environment = {
 
     allPath: 'all',
     staffPath: 'staff',
-    direttivoPath: 'direttvo',
-    direttiviPath: 'direttvi',
+    direttivoPath: 'direttivo',
+    direttiviPath: 'direttivi',
     tipoPath: 'tipo',
     inCaricaPath: 'in_carica',
     organoPath: 'organo',

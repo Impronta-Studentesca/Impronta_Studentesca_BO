@@ -88,11 +88,14 @@
   width: 100%;
   background: rgba(255,255,255,.7);
   border-bottom: 1px solid rgba(16,18,42,.10);
+
+  /* ✅ FIX: riquadro "forte" e clipping */
+  height: 180px;          /* riquadro foto */
+  overflow: hidden;       /* impedisce che la foto esca */
+  flex: 0 0 auto;         /* non si schiaccia/espande in modo strano */
+
   display: grid;
   place-items: center;
-
-  aspect-ratio: 16 / 10;
-  max-height: 180px;
 }
 
 @media (max-width: 700px) {
@@ -100,6 +103,9 @@
 }
 
 .ig__img {
+  /* ✅ FIX: la foto resta sempre DENTRO il riquadro */
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
