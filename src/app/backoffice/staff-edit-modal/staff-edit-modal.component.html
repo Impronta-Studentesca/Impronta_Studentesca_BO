@@ -1,0 +1,258 @@
+<!-- staff-edit-modal.component.html -->
+<div class="modal" (click)="close()">
+  <div class="modal__panel" (click)="$event.stopPropagation()">
+    <!-- HEADER -->
+    <div class="modal__head">
+      <h2>{{ isDir ? 'Modifica persona' : 'Cambia foto' }}</h2>
+      <button class="x" type="button" (click)="close()">×</button>
+    </div>
+
+    <div class="error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab" [class.active]="tab==='ANAG'" type="button" (click)="setTab('ANAG')">
+        Anagrafica
+      </button>
+
+      <button
+        *ngIf="isDir"
+        class="tab"
+        [class.active]="tab==='RAPP'"
+        type="button"
+        (click)="setTab('RAPP')"
+      >
+        Cariche / Rappresentanze
+      </button>
+    </div>
+
+    <!-- ===================== TAB: ANAG ===================== -->
+    <div *ngIf="tab==='ANAG'">
+      <!-- FOTO + CROP -->
+      <div class="photoBox">
+        <!-- SE NON HO SELEZIONATO UN FILE: mostro foto attuale -->
+        <ng-container *ngIf="!photoFile; else cropTpl">
+          <img
+            class="photo"
+            [src]="persona.fotoThumbnailUrl || persona.fotoUrl || ''"
+            *ngIf="(persona.fotoThumbnailUrl || persona.fotoUrl)"
+            alt="Foto persona"
+          />
+
+          <div class="photoPlaceholder" *ngIf="!(persona.fotoThumbnailUrl || persona.fotoUrl)">
+            Nessuna foto
+          </div>
+        </ng-container>
+
+        <!-- CROP UI -->
+        <ng-template #cropTpl>
+          <div class="cropBox">
+            <image-cropper
+              [imageChangedEvent]="imageChangedEvent"
+              [maintainAspectRatio]="true"
+              [aspectRatio]="16 / 10"
+              [transform]="transform"
+              [resizeToWidth]="1200"
+              [imageQuality]="92"
+              format="jpeg"
+              output="blob"
+              (imageCropped)="onImageCropped($event)"
+            ></image-cropper>
+          </div>
+
+          <div class="cropControls">
+            <label class="zoom">
+              <span>Zoom</span>
+              <input
+                #zoomRange
+                type="range"
+                min="1"
+                max="3"
+                step="0.01"
+                [value]="zoom"
+                (input)="zoomChange(zoomRange.valueAsNumber)"
+              />
+            </label>
+
+            <button class="btn btn--ghost" type="button" (click)="resetCropState()" [disabled]="savingPhoto">
+              Annulla
+            </button>
+          </div>
+        </ng-template>
+
+        <div class="photoActions">
+          <input type="file" accept="image/*" (change)="onPickPhoto($event)" />
+
+          <button
+            class="btn btn--primary"
+            type="button"
+            [disabled]="savingPhoto || !form.controls.id.value || !photoFile"
+            (click)="savePhoto()"
+          >
+            {{ savingPhoto ? 'Caricamento…' : 'Salva foto' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- ANAGRAFICA COMPLETA SOLO PER DIRETTIVO -->
+      <form class="form" *ngIf="isDir" [formGroup]="form" (ngSubmit)="saveAnagrafica()">
+        <label class="field" [class.invalid]="form.controls.nome.touched && form.controls.nome.invalid">
+          <span>Nome</span>
+          <input formControlName="nome" />
+        </label>
+
+        <label class="field" [class.invalid]="form.controls.cognome.touched && form.controls.cognome.invalid">
+          <span>Cognome</span>
+          <input formControlName="cognome" />
+        </label>
+
+        <label class="field" [class.invalid]="form.controls.email.touched && form.controls.email.invalid">
+          <span>Email</span>
+          <input formControlName="email" />
+        </label>
+
+        <label class="field" [class.invalid]="form.controls.dipartimentoId.touched && form.controls.dipartimentoId.invalid">
+          <span>Dipartimento</span>
+          <select formControlName="dipartimentoId">
+            <option [ngValue]="null">Seleziona…</option>
+            <option *ngFor="let d of dipList" [ngValue]="d.id">{{ d.nome }} ({{ d.codice }})</option>
+          </select>
+        </label>
+
+        <label
+          class="field"
+          *ngIf="form.controls.dipartimentoId.value"
+          [class.invalid]="form.controls.corsoDiStudiId.touched && form.controls.corsoDiStudiId.invalid"
+        >
+          <span>Corso di studi</span>
+          <select formControlName="corsoDiStudiId">
+            <option [ngValue]="null">Seleziona…</option>
+            <option *ngFor="let c of corsiList" [ngValue]="c.id">
+              {{ c.nome }} • {{ TIPO_CORSO_LABEL[c.tipoCorso] || c.tipoCorso }}
+            </option>
+          </select>
+
+          <small class="hint" *ngIf="corsiLoading">Caricamento corsi…</small>
+          <small class="hint" *ngIf="!corsiLoading && corsiList.length === 0">Nessun corso disponibile.</small>
+        </label>
+
+        <div class="info" *ngIf="selectedCorso?.tipoCorso as tc">
+          <span class="info__label">Tipo corso</span>
+          <span class="pill pill--type">{{ TIPO_CORSO_LABEL[tc] || tc }}</span>
+        </div>
+
+        <label class="field">
+          <span>Anno di corso</span>
+          <input type="number" formControlName="annoCorso" min="1" max="10" />
+        </label>
+
+        <label class="check">
+          <input type="checkbox" formControlName="staff" />
+          <span>È staff</span>
+        </label>
+
+        <div class="modal__actions">
+          <button class="btn btn--ghost" type="button" (click)="close()">Chiudi</button>
+          <button
+            class="btn btn--primary"
+            type="submit"
+            [disabled]="savingAnag || corsiLoading || form.invalid || !form.controls.corsoDiStudiId.value"
+          >
+            {{ savingAnag ? 'Salvataggio…' : 'Salva anagrafica' }}
+          </button>
+        </div>
+      </form>
+
+      <!-- UTENTE NON DIRETTIVO -->
+      <div class="modal__actions" *ngIf="!isDir">
+        <button class="btn btn--ghost" type="button" (click)="close()">Chiudi</button>
+      </div>
+    </div>
+
+    <!-- ===================== TAB: RAPPRESENTANZE ===================== -->
+    <div *ngIf="tab==='RAPP' && isDir" class="section">
+      <h3>Cariche / Rappresentanze</h3>
+
+      <div class="hint" *ngIf="rappList.length === 0">
+        Nessuna rappresentanza associata.
+      </div>
+
+      <!-- LISTA -->
+      <div class="list" *ngIf="rappList.length > 0">
+        <div class="row" *ngFor="let r of rappList; trackBy: trackByRapp">
+          <div class="row__main">
+            <div class="row__title">
+              {{ r.organoNome || ('Organo #' + r.organoRappresentanzaId) }}
+            </div>
+            <div class="row__meta">
+              <span *ngIf="r.dataInizio">Dal {{ r.dataInizio }}</span>
+              <span *ngIf="r.dataFine"> al {{ r.dataFine }}</span>
+              <span *ngIf="!r.dataInizio && !r.dataFine">Date non impostate</span>
+            </div>
+          </div>
+
+          <div class="row__actions">
+            <button class="btn btn--ghost" type="button" (click)="editRapp(r)" [disabled]="savingRapp">
+              Modifica
+            </button>
+
+            <button
+              class="btn btn--danger"
+              type="button"
+              (click)="deleteRapp(r)"
+              [disabled]="savingRapp || deletingRappId === r.id || !r.id"
+              title="Serve l'id dell'associazione per eliminare"
+            >
+              {{ deletingRappId === r.id ? 'Rimozione…' : 'Rimuovi' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORM -->
+      <form class="form" [formGroup]="rappForm" (ngSubmit)="saveRapp()">
+        <h4>{{ editingRapp ? 'Modifica rappresentanza' : 'Aggiungi rappresentanza' }}</h4>
+
+        <!-- ORGANO -->
+        <ng-container *ngIf="organiList.length > 0; else organoIdFallback">
+          <label class="field" [class.invalid]="rappForm.controls.organoRappresentanzaId.touched && rappForm.controls.organoRappresentanzaId.invalid">
+            <span>Organo</span>
+            <select formControlName="organoRappresentanzaId">
+              <option [ngValue]="null">Seleziona…</option>
+              <option *ngFor="let o of organiList; trackBy: trackByLite" [ngValue]="o.id">{{ o.nome }}</option>
+            </select>
+          </label>
+        </ng-container>
+
+        <ng-template #organoIdFallback>
+          <label class="field" [class.invalid]="rappForm.controls.organoRappresentanzaId.touched && rappForm.controls.organoRappresentanzaId.invalid">
+            <span>Organo (ID)</span>
+            <input type="number" formControlName="organoRappresentanzaId" min="1" />
+          </label>
+        </ng-template>
+
+        <label class="field">
+          <span>Data inizio</span>
+          <input type="date" formControlName="dataInizio" />
+        </label>
+
+        <label class="field">
+          <span>Data fine</span>
+          <input type="date" formControlName="dataFine" />
+        </label>
+
+        <div class="modal__actions">
+          <button class="btn btn--ghost" type="button" (click)="resetRappForm()" [disabled]="savingRapp">
+            Annulla
+          </button>
+
+          <button class="btn btn--primary" type="submit" [disabled]="savingRapp || rappForm.invalid">
+            {{ savingRapp ? 'Salvataggio…' : (editingRapp ? 'Salva modifica' : 'Aggiungi') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal__backdrop"></div>
+</div>
