@@ -1,0 +1,156 @@
+<section class="page">
+  <div class="head">
+    <div class="left">
+      <button class="btn btn--ghost" type="button" (click)="back()">← Direttivi</button>
+
+      <div>
+        <h1>Membri direttivo</h1>
+        <p *ngIf="direttivo" class="hint">
+          {{ tipoLabel(direttivo.tipo) }} · {{ direttivo.inizioMandato | date:'dd/MM/yyyy' }}
+          <span *ngIf="direttivo.fineMandato"> → {{ direttivo.fineMandato | date:'dd/MM/yyyy' }}</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="right">
+      <button class="btn btn--primary" type="button" (click)="openAddModal()">
+        + Aggiungi persona
+      </button>
+    </div>
+  </div>
+
+  <div class="error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <!-- LISTA -->
+  <div class="grid" *ngIf="!loading; else loadingTpl">
+    <article class="card" *ngFor="let m of membri; trackBy: trackByPersonaId">
+      <div class="card__top">
+        <h3 class="card__name">{{ m.personaResponseDTO.nome }} {{ m.personaResponseDTO.cognome }}</h3>
+
+        <div class="card__actions">
+          <button class="btn btn--primary btn--sm" type="button" (click)="openRoleModal(m)">
+            Cambia ruolo
+          </button>
+
+          <button class="btn btn--danger btn--sm" type="button" (click)="openRemoveModal(m)">
+            Rimuovi
+          </button>
+        </div>
+      </div>
+
+      <div class="card__row">
+        <div class="role">
+          <div class="role__label">Ruolo</div>
+          <div class="role__value">{{ displayRoleLabel(m.ruoloNelDirettivo) }}</div>
+        </div>
+      </div>
+    </article>
+
+    <p class="hint" *ngIf="membri.length === 0">Nessun membro.</p>
+  </div>
+
+  <ng-template #loadingTpl>
+    <div class="loading">Caricamento…</div>
+  </ng-template>
+
+  <!-- MODALE CAMBIO RUOLO -->
+  <div class="modal" *ngIf="roleModalOpen">
+    <div class="modal__panel" (click)="$event.stopPropagation()">
+      <div class="modal__head">
+        <h2>Cambia ruolo</h2>
+        <button class="x" type="button" (click)="closeRoleModal()">×</button>
+      </div>
+
+      <ng-container *ngIf="toEditRole as r">
+        <p class="modal__text">
+          Modifica ruolo per <strong>{{ r.personaResponseDTO.nome }} {{ r.personaResponseDTO.cognome }}</strong>
+        </p>
+
+        <form class="form-modal" [formGroup]="editRoleForm" (ngSubmit)="confirmRoleChange()">
+          <label class="field">
+            <span>Ruolo nel direttivo</span>
+            <select formControlName="ruoloDirettivo">
+              <option *ngFor="let opt of ruoloDirettivoOptions" [value]="opt.code">{{ opt.label }}</option>
+            </select>
+          </label>
+
+          <div class="modal__actions">
+            <button class="btn btn--ghost" type="button" (click)="closeRoleModal()">Annulla</button>
+            <button class="btn btn--primary" type="submit" [disabled]="loading || editRoleForm.invalid">
+              Salva
+            </button>
+          </div>
+        </form>
+      </ng-container>
+    </div>
+
+    <div class="modal__backdrop" (click)="closeRoleModal()"></div>
+  </div>
+
+  <!-- MODALE ADD PERSONA -->
+  <div class="modal" *ngIf="addModalOpen">
+    <div class="modal__panel" (click)="$event.stopPropagation()">
+      <div class="modal__head">
+        <h2>Aggiungi persona (solo STAFF)</h2>
+        <button class="x" type="button" (click)="closeAddModal()">×</button>
+      </div>
+
+      <form class="form-modal" [formGroup]="addForm" (ngSubmit)="addPersona()">
+        <label class="field">
+          <span>Persona</span>
+          <select formControlName="personaId" [disabled]="loadingPersone || personeDisponibili.length === 0">
+            <option [ngValue]="null" disabled>
+              {{ loadingPersone ? 'Caricamento...' : (personeDisponibili.length ? 'Seleziona una persona' : 'Nessuna persona disponibile') }}
+            </option>
+            <option *ngFor="let p of personeDisponibili" [ngValue]="p.id">
+              {{ p.nome }} {{ p.cognome }}
+            </option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Ruolo nel direttivo</span>
+          <select formControlName="ruoloDirettivo">
+            <option *ngFor="let opt of ruoloDirettivoOptions" [value]="opt.code">{{ opt.label }}</option>
+          </select>
+        </label>
+
+        <div class="modal__actions">
+          <button class="btn btn--ghost" type="button" (click)="closeAddModal()">Annulla</button>
+          <button class="btn btn--primary" type="submit" [disabled]="loading || addForm.invalid">
+            Aggiungi
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal__backdrop" (click)="closeAddModal()"></div>
+  </div>
+
+  <!-- MODALE CONFERMA RIMOZIONE -->
+  <div class="modal" *ngIf="removeModalOpen">
+    <div class="modal__panel" (click)="$event.stopPropagation()">
+      <div class="modal__head">
+        <h2>Conferma rimozione</h2>
+        <button class="x" type="button" (click)="closeRemoveModal()">×</button>
+      </div>
+
+      <ng-container *ngIf="toRemove as r">
+        <p class="modal__text">
+          Vuoi davvero rimuovere
+          <strong>{{ r.personaResponseDTO.nome }} {{ r.personaResponseDTO.cognome }}</strong>
+          dal direttivo?
+        </p>
+
+        <div class="modal__actions">
+          <button class="btn btn--ghost" type="button" (click)="closeRemoveModal()">Annulla</button>
+          <button class="btn btn--danger" type="button" (click)="confirmRemove()" [disabled]="loading">
+            Conferma
+          </button>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="modal__backdrop" (click)="closeRemoveModal()"></div>
+  </div>
+</section>
