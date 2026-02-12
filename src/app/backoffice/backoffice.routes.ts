@@ -25,4 +25,13 @@ export const BACKOFFICE_ROUTES: Routes = [
     loadComponent: () =>
       import('./staff/staff.component').then(m => m.StaffComponent),
   },
+
+  {
+    path: 'direttivi',
+    loadComponent: () => import('./direttivi/direttivi.component').then(m => m.DirettiviComponent),
+  },
+  {
+    path: 'direttivi/:direttivoId/membri',
+    loadComponent: () => import('./membri-direttivo/membri-direttivo.component').then(m => m.MembriDirettivoComponent),
+  },
 ];

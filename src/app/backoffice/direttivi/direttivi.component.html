@@ -1,0 +1,111 @@
+<section class="page">
+  <div class="head">
+    <div>
+      <h1>Direttivi</h1>
+      <p>Filtra e gestisci i direttivi. Clicca una card per entrare nei membri.</p>
+    </div>
+
+    <ng-container *ngIf="isDirettivo$ | async">
+      <button class="btn btn--primary" type="button" (click)="openCreate()">
+        + Nuovo direttivo
+      </button>
+    </ng-container>
+  </div>
+
+  <!-- Filtri -->
+  <div class="filters" [formGroup]="filters">
+    <label class="chk">
+      <input type="checkbox" formControlName="attivo" />
+      <span>Attivo</span>
+    </label>
+
+    <label class="field">
+      <span>Inizio mandato (da)</span>
+      <input type="date" formControlName="inizioDa" />
+    </label>
+
+    <label class="field">
+      <span>Fine mandato (a)</span>
+      <input type="date" formControlName="fineA" />
+    </label>
+  </div>
+
+  <div class="error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <div class="grid" *ngIf="!loading; else loadingTpl">
+    <article class="card" *ngFor="let d of filtered" (click)="openMembri(d)">
+      <div class="card__header">
+        <h3 class="card__name">{{ cardTitle(d) }}</h3>
+        <span class="pill" [class.pill--ok]="d.attivo" [class.pill--off]="!d.attivo">
+          {{ d.attivo ? 'ATTIVO' : 'CHIUSO' }}
+        </span>
+      </div>
+
+      <p class="hint">
+        Tipo: <b>{{ TIPO_DIRETTIVO_LABEL[d.tipo] }}</b>
+        <span *ngIf="d.dipartimentoId"> · Dipartimento ID: <b>{{ d.dipartimentoId }}</b></span>
+      </p>
+
+      <p class="hint">
+        Inizio: {{ d.inizioMandato | date:'dd/MM/yyyy' }}
+        <span *ngIf="d.fineMandato"> · Fine: {{ d.fineMandato | date:'dd/MM/yyyy' }}</span>
+      </p>
+
+      <ng-container *ngIf="isDirettivo$ | async">
+        <div class="card__footer" (click)="$event.stopPropagation()">
+          <button class="btn btn--ghost" type="button" (click)="openEdit(d)">Modifica</button>
+          <button class="btn btn--danger" type="button" (click)="delete(d)">Elimina</button>
+        </div>
+      </ng-container>
+    </article>
+
+    <p class="hint" *ngIf="filtered.length === 0">Nessun direttivo trovato con questi filtri.</p>
+  </div>
+
+  <ng-template #loadingTpl>
+    <div class="loading">Caricamento…</div>
+  </ng-template>
+
+  <!-- MODAL create/edit -->
+  <div class="modal" *ngIf="modalOpen">
+    <div class="modal__panel" (click)="$event.stopPropagation()">
+      <div class="modal__head">
+        <h2>{{ editing ? 'Modifica direttivo' : 'Nuovo direttivo' }}</h2>
+        <button class="x" type="button" (click)="closeModal()">×</button>
+      </div>
+
+      <form class="form" [formGroup]="form" (ngSubmit)="save()">
+        <label class="field">
+          <span>Tipo</span>
+          <select formControlName="tipo">
+            <option *ngFor="let t of tipoOptions" [value]="t">{{ TIPO_DIRETTIVO_LABEL[t] }}</option>
+          </select>
+        </label>
+
+        <label class="field" *ngIf="form.get('tipo')?.value === 'DIPARTIMENTALE'">
+          <span>Dipartimento ID</span>
+          <input type="number" formControlName="dipartimentoId" placeholder="Es. 3" />
+        </label>
+
+        <label class="field">
+          <span>Inizio mandato</span>
+          <input type="date" formControlName="inizioMandato" />
+        </label>
+
+        <label class="field">
+          <span>Fine mandato (vuoto = in carica)</span>
+          <input type="date" formControlName="fineMandato" />
+        </label>
+
+        <div class="modal__actions">
+          <button class="btn btn--ghost" type="button" (click)="closeModal()">Annulla</button>
+          <button class="btn btn--primary" type="submit" [disabled]="loading">
+            {{ editing ? 'Salva' : 'Crea' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal__backdrop" (click)="closeModal()"></div>
+  </div>
+</section>
