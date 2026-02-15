@@ -17,7 +17,7 @@ export class AuthErrorInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     return next.handle(req).pipe(
       catchError((err: unknown) => {
-        if (err instanceof HttpErrorResponse && (err.status === 401 || err.status === 403)) {
+        if (err instanceof HttpErrorResponse && (err.status === 401 )) {
 
           // se eri loggato (anche solo localmente) mostra avviso una volta
           const wasLogged = !!this.auth.getCurrentUser();

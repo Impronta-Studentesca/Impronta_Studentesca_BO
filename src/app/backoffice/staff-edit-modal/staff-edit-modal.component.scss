@@ -19,29 +19,28 @@
   z-index: 81;
   width: min(720px, calc(100% - 24px));
   max-height: min(88vh, 820px);
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
+
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 
   background: #fff;
   border-radius: 18px;
   border: 1px solid rgba(16,18,42,.12);
   box-shadow: 0 24px 80px rgba(0,0,0,.25);
-  padding: 14px;
+}
+
+.modal__top {
+  background: #fff;
+  border-bottom: 1px solid rgba(16,18,42,.08);
 }
 
 .modal__head {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: #fff;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
 
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid rgba(16,18,42,.08);
+  padding: 14px 14px 10px;
 
   h2 { margin: 0; font-size: 18px; }
 }
@@ -59,7 +58,7 @@
 .tabs {
   display: flex;
   gap: 8px;
-  margin-bottom: 12px;
+  padding: 0 14px 12px;
 }
 
 .tab {
@@ -74,6 +73,12 @@
 .tab.active {
   background: rgba(47,91,255,.12);
   border-color: rgba(47,91,255,.30);
+}
+
+.modal__body {
+  padding: 14px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .photoBox {
@@ -152,6 +157,12 @@
 
 .btn--ghost { background: rgba(255,255,255,.55); }
 
+.btn--danger {
+  background: rgba(229,57,53,.10);
+  border-color: rgba(229,57,53,.30);
+  color: #b71c1c;
+}
+
 .btn:disabled {
   opacity: .45;
   cursor: not-allowed;
@@ -159,7 +170,7 @@
 }
 
 .error {
-  margin: 10px 0;
+  margin: 0 0 10px;
   padding: 10px 12px;
   border-radius: 14px;
   border: 1px solid rgba(229,57,53,.30);
@@ -185,10 +196,33 @@
   background: rgba(255, 193, 7, .12);
 }
 
-.todo {
-  padding: 12px;
+/* ---- RAPP LIST ---- */
+.section { display: grid; gap: 12px; }
+
+.list { display: grid; gap: 10px; }
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 10px 12px;
   border-radius: 14px;
-  border: 1px dashed rgba(16,18,42,.25);
-  font-weight: 900;
-  opacity: .75;
+  border: 1px solid rgba(16,18,42,.10);
+  background: rgba(16,18,42,.03);
 }
+
+.row__main { min-width: 0; display: grid; gap: 4px; }
+
+.row__title {
+  font-weight: 950;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row__meta { font-weight: 850; font-size: 12px; opacity: .75; }
+
+.row__actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }

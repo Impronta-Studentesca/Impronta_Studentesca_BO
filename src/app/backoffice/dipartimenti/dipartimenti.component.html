@@ -27,7 +27,7 @@
       <ng-container *ngIf="isDirettivo$ | async">
         <div class="card__footer" (click)="$event.stopPropagation()">
           <button class="btn btn--ghost" type="button" (click)="openEdit(d)">Modifica</button>
-          <button class="btn btn--danger" type="button" (click)="delete(d)">Elimina</button>
+          <button class="btn btn--danger" type="button" (click)="openDeleteModal(d)">Elimina</button>
         </div>
       </ng-container>
     </article>
@@ -68,3 +68,30 @@
     <div class="modal__backdrop" (click)="closeModal()"></div>
   </div>
 </section>
+
+<!-- MODALE CONFERMA ELIMINAZIONE -->
+<div class="modal" *ngIf="deleteModalOpen">
+  <div class="modal__panel" (click)="$event.stopPropagation()">
+    <div class="modal__head">
+      <h2>Conferma eliminazione</h2>
+      <button class="x" type="button" (click)="closeDeleteModal()">×</button>
+    </div>
+
+    <ng-container *ngIf="toDelete as x">
+      <p class="modal__text">
+        Vuoi davvero eliminare il dipartimento
+        <strong>{{ x.nome }} ({{ x.codice }})</strong>?
+      </p>
+
+      <div class="modal__actions">
+        <button class="btn btn--ghost" type="button" (click)="closeDeleteModal()">Annulla</button>
+        <button class="btn btn--danger" type="button" (click)="confirmDelete()" [disabled]="loading">
+          Conferma
+        </button>
+      </div>
+    </ng-container>
+  </div>
+
+  <div class="modal__backdrop" (click)="closeDeleteModal()"></div>
+</div>
+

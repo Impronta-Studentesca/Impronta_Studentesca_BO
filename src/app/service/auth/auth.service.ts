@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import {HttpClient, HttpParams} from '@angular/common/http';
 import { BehaviorSubject, Observable, map, tap, catchError, of } from 'rxjs';
 import { LoginRequestDTO, LoginResponseDTO } from '../../model/auth.model';
+import {PasswordSetRequest} from '../../model/password.model';
 import { environment } from '../../environments/environment';
 import { apiUrl } from '../../core/api-url';
 
@@ -39,6 +40,27 @@ export class AuthService {
       );
   }
 
+  /**
+   * POST /auth/persona/{personaId}/crea/password
+   * Body: { password, token }
+   */
+  creaPassword(personaId: number, password: string, token: string): Observable<void> {
+    const url = apiUrl(environment.api.authPath, 'persona', personaId, 'crea', 'password');
+    const body: PasswordSetRequest = { password, token };
+    return this.http.post<void>(url, body);
+  }
+
+  /**
+   * POST /auth/persona/{personaId}/modifica/password
+   * Body: { password, token }
+   */
+  modificaPassword(personaId: number, password: string, token: string): Observable<void> {
+    const url = apiUrl(environment.api.authPath, 'persona', personaId, 'modifica', 'password');
+    const body: PasswordSetRequest = { password, token };
+    return this.http.post<void>(url, body);
+  }
+
+
   /** Utente sync (utile in guard / sync checks) */
   getCurrentUser(): LoginResponseDTO | null {
     return this._currentUser$.value;
@@ -73,5 +95,11 @@ export class AuthService {
 
   hasStoredUser(): boolean {
     return !!localStorage.getItem(this.USER_KEY);
+  }
+
+  richiestaModificaPassword(email: string): Observable<void> {
+    const safeEmail = encodeURIComponent(email.trim());
+    const url = apiUrl(environment.api.authPath, 'richiesta', 'modifica', 'password', safeEmail);
+    return this.http.get<void>(url, { withCredentials: true });
   }
 }

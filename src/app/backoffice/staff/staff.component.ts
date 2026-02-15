@@ -57,6 +57,12 @@ export class StaffComponent implements OnInit, OnDestroy {
   editMe: CurrentUserLite = null;
   editIsDir = false;
 
+  // --- Modale conferma elimina persona ---
+  deleteModalOpen = false;
+  toDelete: StaffCardDTO | null = null;
+  deletingPersona = false;
+
+
   loading = true;
   errorMsg = '';
   staff: StaffCardDTO[] = [];
@@ -403,4 +409,63 @@ export class StaffComponent implements OnInit, OnDestroy {
     const sid = this.getStaffId(s);
     if (sid != null) this.brokenPhotos.add(sid);
   }
+
+  openDeleteModal(s: StaffCardDTO, ev?: Event): void {
+    ev?.stopPropagation();
+    this.errorMsg = '';
+
+    // solo direttivo vede già il bottone, ma ribadisco lato TS
+    this.toDelete = s;
+    this.deleteModalOpen = true;
+  }
+
+  closeDeleteModal(): void {
+    // evita chiusure mentre sta eliminando
+    this.deleteModalOpen = false;
+    this.toDelete = null;
+  }
+
+  confirmDelete(): void {
+    this.errorMsg = '';
+
+    const s = this.toDelete;
+    if (!s) return;
+
+    const id = this.getStaffId(s);
+    if (!id) {
+      this.errorMsg = 'Impossibile eliminare: manca l’id della persona.';
+      return;
+    }
+
+    this.deletingPersona = true;
+
+    this.staffService.deletePersona(id)
+      .pipe(finalize(() => (this.deletingPersona = false)))
+      .subscribe({
+        next: () => {
+          this.closeDeleteModal();
+          this.load();
+
+          // se per caso stavi editando proprio quella persona, chiudi la modale edit
+          const editId = this.editPersona ? this.getStaffId(this.editPersona) : null;
+          if (editId && editId === id) this.closeEdit();
+        },
+        error: (err) => {
+          this.errorMsg = this.extractApiMessage(err, 'Eliminazione non riuscita.');
+        },
+      });
+  }
+
+// prende il messaggio del tuo handler BE
+  private extractApiMessage(err: any, fallback: string): string {
+    const e = err?.error;
+    return (
+      e?.message ||
+      e?.error ||
+      e?.detail ||
+      err?.message ||
+      fallback
+    );
+  }
+
 }

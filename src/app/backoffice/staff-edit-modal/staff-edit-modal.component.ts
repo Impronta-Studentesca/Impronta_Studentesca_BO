@@ -31,7 +31,6 @@ import {
 // ✅ CROP
 import { ImageCropperComponent, ImageCroppedEvent, ImageTransform } from 'ngx-image-cropper';
 
-
 type CurrentUserLite =
   | {
   id?: number | string;
@@ -48,11 +47,7 @@ type CurrentUserLite =
 type TabKey = 'ANAG' | 'RAPP';
 
 type PersonaRappView = {
-  id: number | null;
-  organoRappresentanzaId: number | null;
-  organoNome: string;
-  dataInizio: string | null;
-  dataFine: string | null;
+  organoNome: string; // ✅ qui ci basta il nome
 };
 
 @Component({
@@ -93,17 +88,10 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
 
   // ---------------- FOTO + CROP ----------------
   photoFile: File | null = null;
-
-  /** evento file input per il cropper */
   imageChangedEvent: Event | null = null;
-
-  /** blob finale croppato */
   croppedBlob: Blob | null = null;
-
-  /** preview croppato (dataURL) */
   croppedPreviewUrl: string | null = null;
 
-  /** zoom */
   zoom = 1;
   transform: ImageTransform = { scale: 1 };
 
@@ -112,14 +100,12 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
   private dipLoadSub?: Subscription;
   private corsiLoadSub?: Subscription;
 
-  // RAPPRESENTANZE
+  // ---------------- RAPPRESENTANZE ----------------
   organiList: OrganoRappresentanzaLiteDTO[] = [];
   rappList: PersonaRappView[] = [];
 
   savingRapp = false;
-  deletingRappId: number | null = null;
-  editingRapp = false;
-
+  editingRapp = false; // lasciato per compatibilità UI
   private initialized = false;
 
   form = this.fb.group({
@@ -136,7 +122,7 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
   });
 
   rappForm = this.fb.group({
-    personaRappresentanzaId: [null as number | null],
+    personaRappresentanzaId: [null as number | null], // non lo usiamo più lato FE per delete
     organoRappresentanzaId: [null as number | null, Validators.required],
     dataInizio: [null as string | null],
     dataFine: [null as string | null],
@@ -145,10 +131,9 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['persona'] && this.persona) {
       this.patchFromPersona();
-      this.rebuildRappFromPersona();
-      this.resetRappForm(false);
+      this.rebuildRappFromPersona(); // ✅ importantissimo
 
-      // reset crop
+      this.resetRappForm(false);
       this.resetCropState();
 
       if (this.initialized) {
@@ -177,8 +162,8 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
     if (!this.isDir) {
       this.form.disable({ emitEvent: false });
     } else {
-      this.rebuildRappFromPersona();
       this.loadOrganiList();
+      this.rebuildRappFromPersona(); // ✅ importantissimo
     }
   }
 
@@ -193,10 +178,21 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
   setTab(t: TabKey): void {
     if (!this.isDir && t !== 'ANAG') return;
     this.tab = t;
+
+    // ✅ ogni volta che apro RAPP ricostruisco lista dai dati già in persona
+    if (t === 'RAPP' && this.isDir) {
+      this.rebuildRappFromPersona();
+    }
   }
 
   close(): void {
     this.closed.emit();
+  }
+
+  // ---------------- error helper ----------------
+  private extractApiMessage(err: any, fallback: string): string {
+    const e = err?.error;
+    return e?.message || e?.error || e?.detail || err?.message || fallback;
   }
 
   // ---------------- PATCH INIT ----------------
@@ -258,7 +254,7 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
     this.dipLoadSub?.unsubscribe();
     this.dipLoadSub = this.dipSvc.getAll().subscribe({
       next: (d) => (this.dipList = d ?? []),
-      error: () => (this.errorMsg = 'Errore durante il caricamento dei dipartimenti.'),
+      error: (err) => (this.errorMsg = this.extractApiMessage(err, 'Errore durante il caricamento dei dipartimenti.')),
     });
 
     const dipId = this.form.controls.dipartimentoId.value;
@@ -297,7 +293,7 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
           if (this.corsiList.length > 0) this.form.controls.corsoDiStudiId.enable({ emitEvent: false });
           if (keepSelection) this.syncSelectedCorso();
         },
-        error: () => (this.errorMsg = 'Errore durante il caricamento dei corsi di studio.'),
+        error: (err) => (this.errorMsg = this.extractApiMessage(err, 'Errore durante il caricamento dei corsi di studio.')),
       });
   }
 
@@ -331,7 +327,6 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
     const file = (ev.target as HTMLInputElement)?.files?.[0] ?? null;
     if (!file) return;
 
-    // (opzionale) blocco lato FE per dimensione
     const MAX_MB = 10;
     if (file.size > MAX_MB * 1024 * 1024) {
       this.errorMsg = `Il file è troppo grande. Max ${MAX_MB}MB.`;
@@ -342,7 +337,6 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
     this.photoFile = file;
     this.imageChangedEvent = ev;
 
-    // reset stato crop precedente
     this.croppedBlob = null;
     this.croppedPreviewUrl = null;
     this.zoom = 1;
@@ -350,13 +344,8 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   onImageCropped(e: ImageCroppedEvent): void {
-    // preferisci blob (più comodo per upload)
-    if (e.blob) {
-      this.croppedBlob = e.blob;
-    }
-    if (e.base64) {
-      this.croppedPreviewUrl = e.base64;
-    }
+    if (e.blob) this.croppedBlob = e.blob;
+    if (e.base64) this.croppedPreviewUrl = e.base64;
   }
 
   zoomChange(v: number): void {
@@ -375,17 +364,11 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
 
   private buildCroppedFile(): File | null {
     if (!this.photoFile) return null;
-
-    // se non ho un blob croppato, torno l’originale
     if (!this.croppedBlob) return this.photoFile;
 
     const originalName = this.photoFile.name || 'photo.jpg';
-
-    // forza estensione jpg se vuoi (qui tengo la stessa estensione se possibile)
     const type = this.croppedBlob.type || this.photoFile.type || 'image/jpeg';
-
-    const fileName = originalName;
-    return new File([this.croppedBlob], fileName, { type });
+    return new File([this.croppedBlob], originalName, { type });
   }
 
   savePhoto(): void {
@@ -409,7 +392,7 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
           this.resetCropState();
           this.saved.emit();
         },
-        error: () => (this.errorMsg = 'Errore durante l’upload della foto.'),
+        error: (err) => (this.errorMsg = this.extractApiMessage(err, 'Errore durante l’upload della foto.')),
       });
   }
 
@@ -422,60 +405,151 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
     });
   }
 
-  private normalizeDate(val: any): string | null {
-    if (!val) return null;
-    const s = String(val);
-    return s.length >= 10 ? s.substring(0, 10) : null;
-  }
-
+  /**
+   * ✅ FIX: costruisce SEMPRE la lista da ciò che hai già sulla persona,
+   * anche se sono solo stringhe (badge) come nella card.
+   */
   private rebuildRappFromPersona(): void {
-    const rappRaw =
+    const raw =
       (this.persona as any)?.rappresentanze ??
       (this.persona as any)?.rappresentanza ??
       (this.persona as any)?.organiRappresentanza ??
       [];
 
-    if (!Array.isArray(rappRaw)) {
+    if (!Array.isArray(raw)) {
       this.rappList = [];
       return;
     }
 
-    this.rappList = rappRaw
-      .map((x: any) => {
-        const id = Number(x?.id ?? x?.personaRappresentanzaId ?? x?.rappresentanteId ?? x?.rappresentanzaId);
+    // caso principale: array di stringhe (badge)
+    if (raw.every((x: any) => typeof x === 'string')) {
+      const names = (raw as string[])
+        .map((s) => String(s ?? '').trim())
+        .filter(Boolean);
 
-        const organoObj = x?.organoRappresentanza ?? x?.organo ?? null;
-        const organoId = Number(x?.organoRappresentanzaId ?? organoObj?.id);
+      // unique case-insensitive
+      const seen = new Set<string>();
+      const uniq = names.filter((n) => {
+        const k = n.toLowerCase();
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
 
-        const organoNome = String(x?.organoNome ?? organoObj?.nome ?? organoObj?.denominazione ?? '').trim();
+      this.rappList = uniq.map((n) => ({ organoNome: n }));
+      return;
+    }
 
-        return {
-          id: Number.isFinite(id) ? id : null,
-          organoRappresentanzaId: Number.isFinite(organoId) ? organoId : null,
-          organoNome,
-          dataInizio: this.normalizeDate(x?.dataInizio ?? x?.inizio ?? x?.dal),
-          dataFine: this.normalizeDate(x?.dataFine ?? x?.fine ?? x?.al),
-        } as PersonaRappView;
-      })
-      .filter((r: PersonaRappView) => !!r.organoRappresentanzaId);
+    // fallback: array di oggetti -> provo a tirar fuori un nome
+    const names = raw
+      .map((x: any) => String(x?.organoNome ?? x?.nome ?? x?.organo?.nome ?? x?.organoRappresentanza?.nome ?? '').trim())
+      .filter(Boolean);
+
+    const seen = new Set<string>();
+    const uniq = names.filter((n: string) => {
+      const k = n.toLowerCase();
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+
+    this.rappList = uniq.map((n: string) => ({ organoNome: n }));
   }
 
-  editRapp(r: PersonaRappView): void {
+  /**
+   * ✅ DELETE: manda al BE solo personaId + nome rappresentanza
+   */
+  deleteRapp(r: PersonaRappView): void {
+    this.errorMsg = '';
     if (!this.isDir) return;
 
-    this.editingRapp = true;
-    this.rappForm.patchValue(
-      {
-        personaRappresentanzaId: r.id,
-        organoRappresentanzaId: r.organoRappresentanzaId,
-        dataInizio: r.dataInizio,
-        dataFine: r.dataFine,
-      },
-      { emitEvent: false }
-    );
+    const personaId = this.form.controls.id.value;
+    if (!personaId) return;
 
-    // in modifica l’organo resta fisso
-    this.rappForm.controls.organoRappresentanzaId.disable({ emitEvent: false });
+    const nome = String(r?.organoNome ?? '').trim();
+    if (!nome) {
+      this.errorMsg = 'Impossibile eliminare: nome rappresentanza mancante.';
+      return;
+    }
+
+    const ok = confirm(`Vuoi davvero rimuovere la rappresentanza "${nome}"?`);
+    if (!ok) return;
+
+    this.savingRapp = true;
+
+    this.adminSvc
+      .eliminaPersonaRappresentanzaByNome(personaId, nome)
+      .pipe(finalize(() => (this.savingRapp = false)))
+      .subscribe({
+        next: () => {
+          // ✅ aggiorno UI subito (lista tab)
+          this.rappList = this.rappList.filter((x) => x.organoNome.toLowerCase() !== nome.toLowerCase());
+
+          // ✅ aggiorno anche i badge della card se esistono (così resta coerente dentro la modale)
+          const badgeArr = (this.persona as any)?.rappresentanze;
+          if (Array.isArray(badgeArr)) {
+            (this.persona as any).rappresentanze = badgeArr.filter(
+              (x: any) => String(x ?? '').trim().toLowerCase() !== nome.toLowerCase()
+            );
+          }
+
+          this.saved.emit(); // il parent può ricaricare la lista staff
+        },
+        error: (err) =>
+          (this.errorMsg = this.extractApiMessage(err, 'Errore durante la rimozione della rappresentanza.')),
+      });
+  }
+
+  // trackBy
+  trackByLite(_: number, x: { id: number }): number {
+    return x.id;
+  }
+
+  trackByRapp(_: number, r: PersonaRappView): string {
+    return (r?.organoNome ?? '').toLowerCase();
+  }
+
+  // ---------------- ANAGRAFICA (solo direttivo) ----------------
+  saveAnagrafica(): void {
+    this.errorMsg = '';
+
+    if (!this.isDir) return;
+
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    const v = this.form.getRawValue();
+
+    const dto: PersonaRequestDTO = {
+      id: v.id!,
+      nome: v.nome!,
+      cognome: v.cognome!,
+      email: v.email!,
+      corsoDiStudiId: v.corsoDiStudiId!,
+      annoCorso: v.annoCorso ?? null,
+      staff: !!v.staff,
+      ruoli: [],
+    } as any;
+
+    this.savingAnag = true;
+
+    this.staffSvc
+      .updatePersonaAnagrafica(dto)
+      .pipe(finalize(() => (this.savingAnag = false)))
+      .subscribe({
+        next: () => {
+          this.snapshot();
+          this.saved.emit();
+        },
+        error: (err) => (this.errorMsg = this.extractApiMessage(err, 'Errore durante il salvataggio anagrafica.')),
+      });
+  }
+
+  // ---------------- RAPP ADD/MOD (rimane com’era) ----------------
+  editRapp(): void {
+    // con solo nomi non ha senso fare “edit” riga: lasciamo compatibilità ma non lo usiamo
   }
 
   resetRappForm(markTouched = true): void {
@@ -541,112 +615,58 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
       .pipe(finalize(() => (this.savingRapp = false)))
       .subscribe({
         next: () => {
+          // ✅ aggiorno subito UI aggiungendo il nome, senza chiamate extra
           const organoNome =
             this.organiList.find((o) => o.id === organoId)?.nome ??
-            this.rappList.find((x) => x.organoRappresentanzaId === organoId)?.organoNome ??
-            '';
+            `Organo #${organoId}`;
 
-          const idFromForm = v.personaRappresentanzaId ?? null;
-
-          let existingIdx = -1;
-          if (this.editingRapp && idFromForm != null) {
-            existingIdx = this.rappList.findIndex((x) => x.id === idFromForm);
-          }
-          if (existingIdx < 0) {
-            existingIdx = this.rappList.findIndex((x) => x.organoRappresentanzaId === organoId);
+          const exists = this.rappList.some((x) => x.organoNome.toLowerCase() === organoNome.toLowerCase());
+          if (!exists) {
+            this.rappList = [{ organoNome }, ...this.rappList];
           }
 
-          const nextRow: PersonaRappView = {
-            id: idFromForm ?? this.rappList[existingIdx]?.id ?? null,
-            organoRappresentanzaId: organoId,
-            organoNome,
-            dataInizio: dto.dataInizio ?? null,
-            dataFine: dto.dataFine ?? null,
-          };
-
-          if (existingIdx >= 0) this.rappList.splice(existingIdx, 1, nextRow);
-          else this.rappList = [nextRow, ...this.rappList];
+          // opzionale: aggiorno anche i badge sulla persona
+          const badgeArr = (this.persona as any)?.rappresentanze;
+          if (Array.isArray(badgeArr)) {
+            const existsBadge = badgeArr.some((x: any) => String(x ?? '').trim().toLowerCase() === organoNome.toLowerCase());
+            if (!existsBadge) badgeArr.unshift(organoNome);
+          }
 
           this.resetRappForm();
           this.saved.emit();
         },
-        error: () => (this.errorMsg = 'Errore durante il salvataggio della rappresentanza.'),
+        error: (err) => (this.errorMsg = this.extractApiMessage(err, 'Errore durante il salvataggio della rappresentanza.')),
       });
   }
 
-  deleteRapp(r: PersonaRappView): void {
-    this.errorMsg = '';
-    if (!this.isDir) return;
-
-    if (!r.id) {
-      this.errorMsg = 'Impossibile eliminare: manca l’id della rappresentanza.';
-      return;
-    }
-
-    this.deletingRappId = r.id;
-
-    this.adminSvc
-      .eliminaPersonaRappresentanza(r.id)
-      .pipe(finalize(() => (this.deletingRappId = null)))
-      .subscribe({
-        next: () => {
-          this.rappList = this.rappList.filter((x) => x.id !== r.id);
-          this.resetRappForm();
-          this.saved.emit();
-        },
-        error: () => (this.errorMsg = 'Errore durante la rimozione della rappresentanza.'),
-      });
-  }
-
-  // trackBy
-  trackByLite(_: number, x: { id: number }): number {
-    return x.id;
-  }
-
-  trackByRapp(_: number, r: PersonaRappView): string {
-    return `${r.organoRappresentanzaId ?? 'x'}-${r.id ?? 'n'}`;
-  }
-
-  // ---------------- ANAGRAFICA (solo direttivo) ----------------
-  saveAnagrafica(): void {
+  // ---------------- DELETE FOTO ----------------
+  deletePhoto(): void {
     this.errorMsg = '';
 
-    if (!this.isDir) return;
+    const personaId = this.form.controls.id.value;
+    if (!personaId) return;
 
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
+    if (!this.isDir && !this.isSelf()) return;
 
-    const v = this.form.getRawValue();
+    const hasPhoto = !!(this.persona?.fotoThumbnailUrl || this.persona?.fotoUrl);
+    if (!hasPhoto) return;
 
-    const dto: PersonaRequestDTO = {
-      id: v.id!,
-      nome: v.nome!,
-      cognome: v.cognome!,
-      email: v.email!,
-      corsoDiStudiId: v.corsoDiStudiId!,
-      annoCorso: v.annoCorso ?? null,
-      staff: !!v.staff,
+    const ok = confirm('Vuoi davvero eliminare la foto?');
+    if (!ok) return;
 
-      // se il tuo DTO lo prevede ma non lo usi, lo mando vuoto
-      ruoli: [],
-    } as any;
-
-    this.savingAnag = true;
+    this.savingPhoto = true;
 
     this.staffSvc
-      .updatePersonaAnagrafica(dto)
-      .pipe(finalize(() => (this.savingAnag = false)))
+      .deleteFotoPersona(personaId)
+      .pipe(finalize(() => (this.savingPhoto = false)))
       .subscribe({
         next: () => {
-          // aggiorno snapshot “iniziale” così non ti resta sporco il form
-          this.snapshot();
+          (this.persona as any).fotoUrl = '';
+          (this.persona as any).fotoThumbnailUrl = '';
+          this.resetCropState();
           this.saved.emit();
         },
-        error: () => (this.errorMsg = 'Errore durante il salvataggio anagrafica.'),
+        error: (err) => (this.errorMsg = this.extractApiMessage(err, 'Errore durante l’eliminazione della foto.')),
       });
   }
-
-
 }

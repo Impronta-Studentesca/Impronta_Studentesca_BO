@@ -12,11 +12,14 @@
       </div>
     </div>
 
-    <div class="right">
-      <button class="btn btn--primary" type="button" (click)="openAddModal()">
-        + Aggiungi persona
-      </button>
-    </div>
+    <!-- SOLO DIRETTIVO -->
+    <ng-container *ngIf="isDirettivo$ | async">
+      <div class="right">
+        <button class="btn btn--primary" type="button" (click)="openAddModal()">
+          + Aggiungi persona
+        </button>
+      </div>
+    </ng-container>
   </div>
 
   <div class="error" *ngIf="errorMsg">{{ errorMsg }}</div>
@@ -27,15 +30,18 @@
       <div class="card__top">
         <h3 class="card__name">{{ m.personaResponseDTO.nome }} {{ m.personaResponseDTO.cognome }}</h3>
 
-        <div class="card__actions">
-          <button class="btn btn--primary btn--sm" type="button" (click)="openRoleModal(m)">
-            Cambia ruolo
-          </button>
+        <!-- SOLO DIRETTIVO -->
+        <ng-container *ngIf="isDirettivo$ | async">
+          <div class="card__actions">
+            <button class="btn btn--primary btn--sm" type="button" (click)="openRoleModal(m)">
+              Cambia ruolo
+            </button>
 
-          <button class="btn btn--danger btn--sm" type="button" (click)="openRemoveModal(m)">
-            Rimuovi
-          </button>
-        </div>
+            <button class="btn btn--danger btn--sm" type="button" (click)="openRemoveModal(m)">
+              Rimuovi
+            </button>
+          </div>
+        </ng-container>
       </div>
 
       <div class="card__row">
@@ -53,8 +59,8 @@
     <div class="loading">Caricamento…</div>
   </ng-template>
 
-  <!-- MODALE CAMBIO RUOLO -->
-  <div class="modal" *ngIf="roleModalOpen">
+  <!-- MODALE CAMBIO RUOLO (SOLO DIRETTIVO) -->
+  <div class="modal" *ngIf="(isDirettivo$ | async) && roleModalOpen">
     <div class="modal__panel" (click)="$event.stopPropagation()">
       <div class="modal__head">
         <h2>Cambia ruolo</h2>
@@ -87,8 +93,8 @@
     <div class="modal__backdrop" (click)="closeRoleModal()"></div>
   </div>
 
-  <!-- MODALE ADD PERSONA -->
-  <div class="modal" *ngIf="addModalOpen">
+  <!-- MODALE ADD PERSONA (SOLO DIRETTIVO) -->
+  <div class="modal" *ngIf="(isDirettivo$ | async) && addModalOpen">
     <div class="modal__panel" (click)="$event.stopPropagation()">
       <div class="modal__head">
         <h2>Aggiungi persona (solo STAFF)</h2>
@@ -127,8 +133,8 @@
     <div class="modal__backdrop" (click)="closeAddModal()"></div>
   </div>
 
-  <!-- MODALE CONFERMA RIMOZIONE -->
-  <div class="modal" *ngIf="removeModalOpen">
+  <!-- MODALE CONFERMA RIMOZIONE (SOLO DIRETTIVO) -->
+  <div class="modal" *ngIf="(isDirettivo$ | async) && removeModalOpen">
     <div class="modal__panel" (click)="$event.stopPropagation()">
       <div class="modal__head">
         <h2>Conferma rimozione</h2>

@@ -14,6 +14,7 @@ export interface DirettivoResponseDTO {
   id: number;
   tipo: TipoDirettivo;
   dipartimentoId?: number | null;
+  dipartimentoCodice: string | null;
   annoAccademico?: string | null; // nel tuo costruttore non lo setti, quindi può arrivare null/undefined
   inizioMandato: string;          // 'YYYY-MM-DD'
   fineMandato?: string | null;    // null = in carica
@@ -26,7 +27,7 @@ export interface DirettivoRequestDTO {
   tipo: TipoDirettivo;
   dipartimentoId?: number | null;
   inizioMandato: string;          // 'YYYY-MM-DD'
-  fineMandato?: string | null;    // null = in carica
+  fineMandato?: string | null;
 }
 
 /** DTO per assegnare/modificare persona nel direttivo */

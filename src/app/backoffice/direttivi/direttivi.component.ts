@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -12,6 +12,9 @@ import {
   TipoDirettivo,
   TIPO_DIRETTIVO_LABEL
 } from '../../model/direttivo.model';
+import { extractApiErrorMessage } from '../../core/http-error';
+
+import { DipartimentiService, DipartimentoDTO } from '../../service/dipartimenti/dipartimenti.service';
 
 @Component({
   selector: 'app-direttivi',
@@ -23,6 +26,7 @@ import {
 export class DirettiviComponent implements OnInit, OnDestroy {
   private auth = inject(AuthService);
   private admin = inject(AdminService);
+  private dipService = inject(DipartimentiService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
 
@@ -38,7 +42,6 @@ export class DirettiviComponent implements OnInit, OnDestroy {
   private subFilters?: Subscription;
   private subTipo?: Subscription;
 
-  // ✅ solo DIRETTIVO vede i comandi admin
   isDirettivo$ = this.auth.currentUser$.pipe(
     map(u => {
       const ruoli = (u?.ruoli ?? []) as any;
@@ -47,14 +50,12 @@ export class DirettiviComponent implements OnInit, OnDestroy {
     })
   );
 
-  // Filtri: attivo default true
   filters = this.fb.group({
     attivo: [true],
-    inizioDa: [''],  // YYYY-MM-DD
-    fineA: [''],     // YYYY-MM-DD
+    inizioDa: [''],
+    fineA: [''],
   });
 
-  // Modal create/edit
   modalOpen = false;
   editing: DirettivoResponseDTO | null = null;
 
@@ -65,20 +66,31 @@ export class DirettiviComponent implements OnInit, OnDestroy {
     fineMandato: [''],
   });
 
+  // ✅ Dipartimenti per la select (mostro CODICE, salvo ID)
+  dipartimentiOptions: DipartimentoDTO[] = [];
+  loadingDipartimenti = false;
+  private dipartimentiLoaded = false;
+
+  // ✅ Modal conferma eliminazione
+  deleteModalOpen = false;
+  toDelete?: DirettivoResponseDTO;
+
   ngOnInit(): void {
     this.loadAll();
 
     this.subFilters = this.filters.valueChanges.subscribe(() => this.applyFilters());
 
-    // dipartimentoId obbligatorio solo se DIPARTIMENTALE
     this.subTipo = this.form.get('tipo')!.valueChanges.subscribe((t) => {
       const dipCtrl = this.form.get('dipartimentoId')!;
+
       if (t === TipoDirettivo.DIPARTIMENTALE) {
         dipCtrl.setValidators([Validators.required]);
+        this.loadDipartimenti(); // ✅ carico lista dipartimenti
       } else {
         dipCtrl.clearValidators();
         dipCtrl.setValue(null);
       }
+
       dipCtrl.updateValueAndValidity({ emitEvent: false });
     });
   }
@@ -86,6 +98,29 @@ export class DirettiviComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subFilters?.unsubscribe();
     this.subTipo?.unsubscribe();
+  }
+
+  private loadDipartimenti(): void {
+    if (this.dipartimentiLoaded || this.loadingDipartimenti) return;
+
+    this.loadingDipartimenti = true;
+
+    this.dipService.getAll()
+      .pipe(finalize(() => (this.loadingDipartimenti = false)))
+      .subscribe({
+        next: (data) => {
+          this.dipartimentiOptions = (data ?? [])
+            .slice()
+            .sort((a, b) => (a.codice ?? '').localeCompare(b.codice ?? ''));
+          this.dipartimentiLoaded = true;
+        },
+        error: (err) => {
+          // non blocco tutta la pagina, ma segnalo
+          this.errorMsg = extractApiErrorMessage(err, 'Errore durante il recupero dei dipartimenti.');
+          this.dipartimentiOptions = [];
+          this.dipartimentiLoaded = false;
+        },
+      });
   }
 
   loadAll(): void {
@@ -99,7 +134,7 @@ export class DirettiviComponent implements OnInit, OnDestroy {
           this.direttivi = data ?? [];
           this.applyFilters();
         },
-        error: () => (this.errorMsg = 'Errore nel recupero dei direttivi.'),
+        error: (err) => (this.errorMsg = extractApiErrorMessage(err, 'Errore durante il recupero dei direttivi')),
       });
   }
 
@@ -124,12 +159,12 @@ export class DirettiviComponent implements OnInit, OnDestroy {
   }
 
   cardTitle(d: DirettivoResponseDTO): string {
-    const tipo = this.TIPO_DIRETTIVO_LABEL[d.tipo];
+    const tipo = !d.dipartimentoId ? this.TIPO_DIRETTIVO_LABEL[d.tipo] : '';
     const ins = d.inizioMandato;
     const fin = d.fineMandato;
-    const range = fin ? `${ins} → ${fin}` : `dal ${ins}`;
-    const extra = d.dipartimentoId ? ` · Dip#${d.dipartimentoId}` : '';
-    return `${tipo} ${range}${extra}`;
+    const range = fin ? `dal ${ins} <br>al ${fin}` : `dal ${ins}`;
+    const extra = d.dipartimentoId ? `${d.dipartimentoCodice}` : '';
+    return `${tipo} ${extra}<br>${range}`;
   }
 
   openMembri(d: DirettivoResponseDTO): void {
@@ -139,7 +174,6 @@ export class DirettiviComponent implements OnInit, OnDestroy {
     );
   }
 
-  // --- Modal CRUD
   openCreate(): void {
     this.editing = null;
     this.form.reset({
@@ -153,12 +187,19 @@ export class DirettiviComponent implements OnInit, OnDestroy {
 
   openEdit(d: DirettivoResponseDTO): void {
     this.editing = d;
+
+    // ✅ se è DIPARTIMENTALE, carico i dipartimenti per far funzionare la select
+    if (d.tipo === TipoDirettivo.DIPARTIMENTALE) {
+      this.loadDipartimenti();
+    }
+
     this.form.setValue({
       tipo: d.tipo,
       dipartimentoId: (d.dipartimentoId ?? null) as any,
       inizioMandato: (d.inizioMandato ?? '').slice(0, 10),
       fineMandato: d.fineMandato ? d.fineMandato.slice(0, 10) : '',
     });
+
     this.modalOpen = true;
   }
 
@@ -174,9 +215,8 @@ export class DirettiviComponent implements OnInit, OnDestroy {
     }
 
     const tipo = this.form.get('tipo')!.value as TipoDirettivo;
-    const dipartimentoIdRaw = this.form.get('dipartimentoId')!.value;
     const dipartimentoId =
-      tipo === TipoDirettivo.DIPARTIMENTALE ? Number(dipartimentoIdRaw) : null;
+      tipo === TipoDirettivo.DIPARTIMENTALE ? (this.form.get('dipartimentoId')!.value as number) : null;
 
     const payload: DirettivoRequestDTO = {
       id: this.editing?.id ?? null,
@@ -197,22 +237,43 @@ export class DirettiviComponent implements OnInit, OnDestroy {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: () => { this.closeModal(); this.loadAll(); },
-        error: () => (this.errorMsg = 'Operazione non riuscita.'),
+        error: (err) => (this.errorMsg = extractApiErrorMessage(err, 'Operazione non riuscita.')),
       });
   }
 
-  delete(d: DirettivoResponseDTO): void {
-    const ok = confirm(`Eliminare questo direttivo?\n${this.cardTitle(d)}`);
-    if (!ok) return;
+  openDeleteModal(d: DirettivoResponseDTO): void {
+    this.toDelete = d;
+    this.deleteModalOpen = true;
+  }
+
+  closeDeleteModal(): void {
+    this.deleteModalOpen = false;
+    this.toDelete = undefined;
+  }
+
+  confirmDelete(): void {
+    if (!this.toDelete) return;
 
     this.loading = true;
     this.errorMsg = null;
 
-    this.admin.eliminaDirettivo(d.id)
+    this.admin.eliminaDirettivo(this.toDelete.id)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
-        next: () => this.loadAll(),
-        error: () => (this.errorMsg = 'Eliminazione non riuscita.'),
+        next: () => {
+          this.closeDeleteModal();
+          this.loadAll();
+        },
+        error: (err) => {
+          this.closeDeleteModal();
+          this.errorMsg = extractApiErrorMessage(err, 'Eliminazione non riuscita.');
+        },
       });
+  }
+
+  @HostListener('document:keydown.escape')
+  onEsc(): void {
+    if (this.deleteModalOpen) this.closeDeleteModal();
+    else if (this.modalOpen) this.closeModal();
   }
 }

@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './service/auth/auth.guard';
 import {loginGuard} from "./service/auth/login.guard";
+import {PasswordSetPageComponent} from "./password-set-page/password-set-page.component";
 
 export const routes: Routes = [
   {
@@ -16,6 +17,11 @@ export const routes: Routes = [
   {path: '',
     canActivate: [loginGuard],
     loadComponent: () => import('./welcome/welcome.component').then(m => m.WelcomeComponent),
+  },
+  {
+    path: 'password/:action/:personaId',
+    component: PasswordSetPageComponent,
+    title: 'password',
   },
 ];
 

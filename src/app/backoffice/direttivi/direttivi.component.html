@@ -35,7 +35,7 @@
   <div class="grid" *ngIf="!loading; else loadingTpl">
     <article class="card" *ngFor="let d of filtered" (click)="openMembri(d)">
       <div class="card__header">
-        <h3 class="card__name">{{ cardTitle(d) }}</h3>
+        <h3 class="card__name" [innerHTML]="cardTitle(d)"></h3>
         <span class="pill" [class.pill--ok]="d.attivo" [class.pill--off]="!d.attivo">
           {{ d.attivo ? 'ATTIVO' : 'CHIUSO' }}
         </span>
@@ -43,7 +43,7 @@
 
       <p class="hint">
         Tipo: <b>{{ TIPO_DIRETTIVO_LABEL[d.tipo] }}</b>
-        <span *ngIf="d.dipartimentoId"> · Dipartimento ID: <b>{{ d.dipartimentoId }}</b></span>
+        <span *ngIf="d.dipartimentoId"> <b>{{ d.dipartimentoId }}</b></span>
       </p>
 
       <p class="hint">
@@ -54,7 +54,7 @@
       <ng-container *ngIf="isDirettivo$ | async">
         <div class="card__footer" (click)="$event.stopPropagation()">
           <button class="btn btn--ghost" type="button" (click)="openEdit(d)">Modifica</button>
-          <button class="btn btn--danger" type="button" (click)="delete(d)">Elimina</button>
+          <button class="btn btn--danger" type="button" (click)="openDeleteModal(d)">Elimina</button>
         </div>
       </ng-container>
     </article>
@@ -82,9 +82,30 @@
           </select>
         </label>
 
+        <!-- ✅ QUI: select dipartimenti (mostro CODICE, salvo ID) -->
         <label class="field" *ngIf="form.get('tipo')?.value === 'DIPARTIMENTALE'">
-          <span>Dipartimento ID</span>
-          <input type="number" formControlName="dipartimentoId" placeholder="Es. 3" />
+          <span>Dipartimento</span>
+
+          <select
+            formControlName="dipartimentoId"
+            [disabled]="loadingDipartimenti || dipartimentiOptions.length === 0"
+          >
+            <option [ngValue]="null" disabled>
+              {{
+                loadingDipartimenti
+                  ? 'Caricamento...'
+                  : (dipartimentiOptions.length ? 'Seleziona un dipartimento' : 'Nessun dipartimento disponibile')
+              }}
+            </option>
+
+            <option *ngFor="let d of dipartimentiOptions" [ngValue]="d.id">
+              {{ d.codice }} <!-- se vuoi anche nome: {{ d.codice }} · {{ d.nome }} -->
+            </option>
+          </select>
+
+          <small class="error" *ngIf="form.get('dipartimentoId')?.touched && form.get('dipartimentoId')?.invalid">
+            Seleziona un dipartimento.
+          </small>
         </label>
 
         <label class="field">
@@ -109,3 +130,30 @@
     <div class="modal__backdrop" (click)="closeModal()"></div>
   </div>
 </section>
+
+<!-- MODALE CONFERMA ELIMINAZIONE -->
+<div class="modal" *ngIf="deleteModalOpen">
+  <div class="modal__panel" (click)="$event.stopPropagation()">
+    <div class="modal__head">
+      <h2>Conferma eliminazione</h2>
+      <button class="x" type="button" (click)="closeDeleteModal()">×</button>
+    </div>
+
+    <ng-container *ngIf="toDelete as x">
+      <p class="modal__text">
+        Vuoi davvero eliminare questo direttivo?
+        <br />
+        <strong>{{ cardTitle(x) }}</strong>
+      </p>
+
+      <div class="modal__actions">
+        <button class="btn btn--ghost" type="button" (click)="closeDeleteModal()">Annulla</button>
+        <button class="btn btn--danger" type="button" (click)="confirmDelete()" [disabled]="loading">
+          Conferma
+        </button>
+      </div>
+    </ng-container>
+  </div>
+
+  <div class="modal__backdrop" (click)="closeDeleteModal()"></div>
+</div>

@@ -81,6 +81,8 @@
           <div class="ig__details">
             <div class="ig__line" *ngIf="s.corsoDiStudi">
               <span class="ig__strong">{{ s.corsoDiStudi.nome }}</span>
+            </div>
+            <div class="ig__line" *ngIf="s.corsoDiStudi">
               <span class="ig__muted" *ngIf="s.annoCorso"> • Anno {{ s.annoCorso }}</span>
             </div>
 
@@ -116,7 +118,8 @@
                   *ngIf="vm.isDir"
                   class="btn btn--danger"
                   type="button"
-                  (click)="delete(s)"
+                  (click)="openDeleteModal(s, $event)"
+
                 >
                   Elimina
                 </button>
@@ -232,4 +235,36 @@
   (closed)="closeEdit()"
   (saved)="onEditSaved()"
 ></app-staff-edit-modal>
+
+<!-- MODAL CONFERMA ELIMINAZIONE PERSONA -->
+<div class="modal modal--confirm" *ngIf="deleteModalOpen">
+  <div class="modal__panel" (click)="$event.stopPropagation()">
+    <div class="modal__head">
+      <h2>Conferma eliminazione</h2>
+      <button class="x" type="button" (click)="closeDeleteModal()">×</button>
+    </div>
+
+    <ng-container *ngIf="toDelete as t">
+      <p class="confirm__text">
+        Vuoi davvero eliminare
+        <strong>{{ t.nome }} {{ t.cognome }}</strong>?
+        <br />
+        <span class="confirm__warn">Questa azione è irreversibile.</span>
+      </p>
+
+      <div class="modal__actions">
+        <button class="btn btn--ghost" type="button" (click)="closeDeleteModal()" [disabled]="deletingPersona">
+          Annulla
+        </button>
+
+        <button class="btn btn--danger" type="button" (click)="confirmDelete()" [disabled]="deletingPersona">
+          {{ deletingPersona ? 'Eliminazione…' : 'Conferma' }}
+        </button>
+      </div>
+    </ng-container>
+  </div>
+
+  <div class="modal__backdrop" (click)="closeDeleteModal()"></div>
+</div>
+
 

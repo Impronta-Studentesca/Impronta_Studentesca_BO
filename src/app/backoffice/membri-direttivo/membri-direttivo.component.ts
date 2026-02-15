@@ -13,6 +13,8 @@ import {
   RuoloDirettivoCode,
   RUOLO_DIRETTIVO_LABEL_BY_CODE,
 } from '../../model/direttivo.model';
+import {extractApiErrorMessage} from "../../core/http-error";
+import {AuthService} from "../../service/auth/auth.service";
 
 @Component({
   selector: 'app-membri-direttivo',
@@ -22,6 +24,7 @@ import {
   styleUrl: './membri-direttivo.component.scss',
 })
 export class MembriDirettivoComponent implements OnInit {
+  private auth = inject(AuthService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private location = inject(Location);
@@ -39,6 +42,14 @@ export class MembriDirettivoComponent implements OnInit {
   addModalOpen = false;
   personeDisponibili: PersonaMiniDTO[] = [];
   loadingPersone = false;
+
+  isDirettivo$ = this.auth.currentUser$.pipe(
+    map(u => {
+      const ruoli = (u?.ruoli ?? []) as any;
+      const arr = Array.isArray(ruoli) ? ruoli : Array.from(ruoli ?? []);
+      return arr.includes('DIRETTIVO');
+    })
+  );
 
   ruoloDirettivoOptions = RUOLI_DIRETTIVO;
   private roleCodeSet = new Set<RuoloDirettivoCode>(RUOLI_DIRETTIVO.map(r => r.code));
@@ -101,9 +112,9 @@ export class MembriDirettivoComponent implements OnInit {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (data) => (this.membri = data ?? []),
-        error: () => {
+        error: (err) => {
           this.membri = [];
-          this.errorMsg = 'Errore nel recupero membri direttivo.';
+          this.errorMsg = extractApiErrorMessage(err, 'Recupero non riuscito.');
         },
       });
   }
@@ -190,7 +201,7 @@ export class MembriDirettivoComponent implements OnInit {
           this.toEditRole!.ruoloNelDirettivo = ruoloNelDirettivo;
           this.closeRoleModal();
         },
-        error: () => (this.errorMsg = 'Modifica ruolo non riuscita.'),
+        error: (err) => (this.errorMsg = extractApiErrorMessage(err, 'Modifica non riuscita.')),
       });
   }
 
@@ -219,7 +230,10 @@ export class MembriDirettivoComponent implements OnInit {
       .pipe(finalize(() => (this.loadingPersone = false)))
       .subscribe({
         next: (data) => (this.personeDisponibili = data ?? []),
-        error: () => (this.personeDisponibili = []),
+        error: (err) => {
+          this.personeDisponibili = [];
+          this.errorMsg = extractApiErrorMessage(err, 'Recupero non riuscito');
+          },
       });
   }
 
@@ -249,7 +263,7 @@ export class MembriDirettivoComponent implements OnInit {
           this.closeAddModal();
           this.loadMembri();
         },
-        error: () => (this.errorMsg = 'Assegnazione non riuscita.'),
+        error: (err) => (this.errorMsg = extractApiErrorMessage(err, 'Assegnazione non riuscita.')),
       });
   }
 
@@ -282,7 +296,9 @@ export class MembriDirettivoComponent implements OnInit {
           this.loadMembri();
           if (this.addModalOpen) this.loadPersoneDisponibili();
         },
-        error: () => (this.errorMsg = 'Rimozione non riuscita.'),
+        error: (err) => {
+          this.closeRemoveModal()
+          this.errorMsg = extractApiErrorMessage(err, 'Rimozione non riuscita.')},
       });
   }
 

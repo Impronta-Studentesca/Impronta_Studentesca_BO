@@ -37,4 +37,10 @@ export class StaffService {
     fd.append('file', file);
     return this.http.post<void>(url, fd, { withCredentials: true });
   }
+
+  deleteFotoPersona(personaId: number) {
+    const url = apiUrl(environment.api.staffPath, environment.api.personaPath, personaId, 'foto');
+    return this.http.delete<void>(url, { withCredentials: true });
+  }
+
 }

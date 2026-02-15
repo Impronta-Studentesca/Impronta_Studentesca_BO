@@ -53,7 +53,7 @@ export class AdminService {
    */
   getDirettivi(): Observable<DirettivoResponseDTO[]> {
     const direttiviPath = (environment.api as any).direttiviPath ?? 'direttivi';
-    const url = apiUrl(environment.api.adminPath, direttiviPath);
+    const url = apiUrl(environment.api.publicPath, direttiviPath);
     return this.http.get<DirettivoResponseDTO[]>(url, { withCredentials: true });
   }
 
@@ -156,8 +156,9 @@ export class AdminService {
     return this.http.put<void>(url, dto, { withCredentials: true });
   }
 
-  eliminaPersonaRappresentanza(personaRappresentanzaId: number): Observable<void> {
-    const url = apiUrl(environment.api.adminPath, environment.api.rappresentantePath, personaRappresentanzaId);
+  eliminaPersonaRappresentanzaByNome(personaId: number, nomeRappresentanza: string): Observable<void> {
+    const baseUrl = apiUrl(environment.api.adminPath, 'persona', personaId, 'rappresentante');
+    const url = `${baseUrl}?nome=${encodeURIComponent(nomeRappresentanza)}`;
     return this.http.delete<void>(url, { withCredentials: true });
   }
 }

@@ -382,3 +382,28 @@
   border-color: rgba(255, 193, 7, .35);
   background: rgba(255, 193, 7, .12);
 }
+
+.modal--confirm {
+  z-index: 90; /* sopra al create (60) e sopra alla pagina */
+}
+
+.modal--confirm .modal__panel {
+  width: min(520px, calc(100% - 24px));
+  max-height: none;
+}
+
+.confirm__text {
+  margin: 12px 0 0;
+  font-weight: 850;
+  opacity: .9;
+  line-height: 1.35;
+}
+
+.confirm__warn {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: .75;
+  font-weight: 900;
+}
+

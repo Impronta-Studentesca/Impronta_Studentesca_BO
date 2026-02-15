@@ -1,15 +1,15 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize, map, switchMap } from 'rxjs';
 import { Location } from '@angular/common';
 
-
 import { AuthService } from '../../service/auth/auth.service';
 import { CorsiService } from '../../service/corsi/corsi.service';
 import { CorsoDiStudiRequestDTO, CorsoDiStudiResponseDTO, TipoCorso } from '../../model/corsi.model';
 import { TIPO_CORSO_LABEL } from '../../core/constants/tipo-corso-label';
+import {extractApiErrorMessage} from "../../core/http-error";
 
 @Component({
   selector: 'app-corsi',
@@ -24,19 +24,16 @@ export class CorsiComponent implements OnInit {
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);
   private corsiSvc = inject(CorsiService);
+  private location = inject(Location);
 
   dipartimentoId!: number;
   dipartimentoNome!: string;
   dipartimentoCodice!: string;
 
-  private location = inject(Location);
-
-
   corsi: CorsoDiStudiResponseDTO[] = [];
   loading = false;
   errorMsg: string | null = null;
 
-  // labels per template
   TIPO_CORSO_LABEL = TIPO_CORSO_LABEL;
   tipoCorsoOptions = Object.values(TipoCorso);
 
@@ -48,7 +45,6 @@ export class CorsiComponent implements OnInit {
     })
   );
 
-  // modal create/edit
   modalOpen = false;
   editing: CorsoDiStudiResponseDTO | null = null;
 
@@ -57,13 +53,16 @@ export class CorsiComponent implements OnInit {
     tipoCorso: [TipoCorso.TRIENNALE as TipoCorso, [Validators.required]],
   });
 
+  // ✅ Modal conferma eliminazione
+  deleteModalOpen = false;
+  toDelete?: CorsoDiStudiResponseDTO;
+
   ngOnInit(): void {
     const nav = this.router.getCurrentNavigation();
     const state = (nav?.extras?.state as any) ?? this.location.getState();
 
     this.dipartimentoNome = state?.dipartimentoNome ?? '';
     this.dipartimentoCodice = state?.dipartimentoCodice ?? '';
-    console.log("dipartimentoNome: ",this.dipartimentoNome, " dipartimentoCodice: ", this.dipartimentoCodice);
 
     this.route.paramMap
       .pipe(
@@ -75,7 +74,6 @@ export class CorsiComponent implements OnInit {
       )
       .subscribe();
   }
-
 
   private loadAll$() {
     this.loading = true;
@@ -98,22 +96,15 @@ export class CorsiComponent implements OnInit {
     this.router.navigate(['/backoffice/dipartimenti']);
   }
 
-  // ---- modal
   openCreate(): void {
     this.editing = null;
-    this.form.reset({
-      nome: '',
-      tipoCorso: TipoCorso.TRIENNALE,
-    });
+    this.form.reset({ nome: '', tipoCorso: TipoCorso.TRIENNALE });
     this.modalOpen = true;
   }
 
   openEdit(c: CorsoDiStudiResponseDTO): void {
     this.editing = c;
-    this.form.setValue({
-      nome: c.nome,
-      tipoCorso: c.tipoCorso,
-    });
+    this.form.setValue({ nome: c.nome, tipoCorso: c.tipoCorso });
     this.modalOpen = true;
   }
 
@@ -148,22 +139,29 @@ export class CorsiComponent implements OnInit {
     req$
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
-        next: () => {
-          this.closeModal();
-          this.reload();
-        },
-        error: () => (this.errorMsg = 'Operazione non riuscita.'),
+        next: () => { this.closeModal(); this.reload(); },
+        error: (err) => (this.errorMsg = extractApiErrorMessage(err, 'Eliminazione non riuscita.')),
       });
   }
 
-  delete(c: CorsoDiStudiResponseDTO): void {
-    const ok = confirm(`Eliminare il corso "${c.nome}"?`);
-    if (!ok) return;
+  // ✅ al posto di confirm()
+  openDeleteModal(c: CorsoDiStudiResponseDTO): void {
+    this.toDelete = c;
+    this.deleteModalOpen = true;
+  }
+
+  closeDeleteModal(): void {
+    this.deleteModalOpen = false;
+    this.toDelete = undefined;
+  }
+
+  confirmDelete(): void {
+    if (!this.toDelete) return;
 
     const payload: CorsoDiStudiRequestDTO = {
-      id: c.id,
-      nome: c.nome,
-      tipoCorso: c.tipoCorso,
+      id: this.toDelete.id,
+      nome: this.toDelete.nome,
+      tipoCorso: this.toDelete.tipoCorso,
       dipartimentoId: this.dipartimentoId,
     };
 
@@ -173,8 +171,19 @@ export class CorsiComponent implements OnInit {
     this.corsiSvc.delete(payload)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
-        next: () => this.reload(),
-        error: () => (this.errorMsg = 'Eliminazione non riuscita.'),
+        next: () => {
+          this.closeDeleteModal();
+          this.reload();
+        },
+        error: (err) => {
+          this.closeDeleteModal();
+          this.errorMsg = extractApiErrorMessage(err, 'Eliminazione non riuscita.')},
       });
+  }
+
+  @HostListener('document:keydown.escape')
+  onEsc(): void {
+    if (this.deleteModalOpen) this.closeDeleteModal();
+    else if (this.modalOpen) this.closeModal();
   }
 }

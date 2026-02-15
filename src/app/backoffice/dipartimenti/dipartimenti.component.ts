@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,6 +10,7 @@ import {
   DipartimentoDTO,
   DipartimentoRequestDTO
 } from '../../service/dipartimenti/dipartimenti.service';
+import {extractApiErrorMessage} from "../../core/http-error";
 
 @Component({
   selector: 'app-dipartimenti',
@@ -32,7 +33,6 @@ export class DipartimentiComponent implements OnInit {
   isDirettivo$ = this.auth.currentUser$.pipe(
     map(u => {
       const ruoli = (u?.ruoli ?? []) as any;
-      // copre sia array che Set-like
       const arr = Array.isArray(ruoli) ? ruoli : Array.from(ruoli ?? []);
       return arr.includes('DIRETTIVO');
     })
@@ -47,6 +47,10 @@ export class DipartimentiComponent implements OnInit {
     codice: ['', [Validators.required, Validators.minLength(2)]],
   });
 
+  // ✅ Modal conferma eliminazione
+  deleteModalOpen = false;
+  toDelete?: DipartimentoDTO;
+
   ngOnInit(): void {
     this.loadAll();
   }
@@ -59,7 +63,7 @@ export class DipartimentiComponent implements OnInit {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (data) => (this.dipartimenti = data ?? []),
-        error: () => (this.errorMsg = 'Errore nel recupero dei dipartimenti.'),
+        error: (err) => (this.errorMsg = extractApiErrorMessage(err, 'Errore nel recupero dei dipartimenti')),
       });
   }
 
@@ -72,10 +76,9 @@ export class DipartimentiComponent implements OnInit {
 
   openEdit(d: DipartimentoDTO): void {
     this.editing = d;
-    this.form.setValue({ nome: d.nome, codice: d.codice }); // ✅ setValue (non reset)
+    this.form.setValue({ nome: d.nome, codice: d.codice });
     this.modalOpen = true;
   }
-
 
   closeModal(): void {
     this.modalOpen = false;
@@ -88,17 +91,14 @@ export class DipartimentiComponent implements OnInit {
       return;
     }
 
-    // ✅ leggi SEMPRE dal form
     const nome = (this.form.get('nome')?.value ?? '').trim();
     const codice = (this.form.get('codice')?.value ?? '').trim().toUpperCase();
 
     const payload = {
-      id: this.editing?.id,   // ✅ id solo se edit
+      id: this.editing?.id,
       nome,
       codice,
     };
-
-    console.log('PAYLOAD DIPARTIMENTO', payload); // 🔍 verifica in console
 
     this.loading = true;
     this.errorMsg = null;
@@ -110,23 +110,31 @@ export class DipartimentiComponent implements OnInit {
     req$
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
-        next: () => {
-          this.closeModal();
-          this.loadAll();
-        },
-        error: () => (this.errorMsg = 'Operazione non riuscita.'),
+        next: () => { this.closeModal(); this.loadAll(); },
+        error: (err) => {
+          this.closeDeleteModal();
+          this.errorMsg = extractApiErrorMessage(err, 'Operazione non riuscita.')},
       });
   }
 
+  // ✅ al posto di confirm()
+  openDeleteModal(d: DipartimentoDTO): void {
+    this.toDelete = d;
+    this.deleteModalOpen = true;
+  }
 
-  delete(d: DipartimentoDTO): void {
-    const ok = confirm(`Eliminare il dipartimento "${d.nome}" (${d.codice})?`);
-    if (!ok) return;
+  closeDeleteModal(): void {
+    this.deleteModalOpen = false;
+    this.toDelete = undefined;
+  }
+
+  confirmDelete(): void {
+    if (!this.toDelete) return;
 
     const payload: DipartimentoRequestDTO = {
-      id: d.id,
-      nome: d.nome,
-      codice: d.codice,
+      id: this.toDelete.id,
+      nome: this.toDelete.nome,
+      codice: this.toDelete.codice,
     };
 
     this.loading = true;
@@ -135,16 +143,28 @@ export class DipartimentiComponent implements OnInit {
     this.svc.delete(payload)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
-        next: () => this.loadAll(),
-        error: () => (this.errorMsg = 'Eliminazione non riuscita.'),
+        next: () => {
+          this.closeDeleteModal();
+          this.loadAll();
+        },
+        error: (err) => {
+          this.closeDeleteModal();
+          this.errorMsg = extractApiErrorMessage(err, 'Eliminazione non riuscita.')
+        },
       });
   }
 
-  // Click card → in futuro corsi
+  // Click card → corsi
   openCorsi(d: DipartimentoDTO): void {
     this.router.navigate(
       ['/backoffice/dipartimenti', d.id, 'corsi'],
       { state: { dipartimentoNome: d.nome, dipartimentoCodice: d.codice } }
     );
+  }
+
+  @HostListener('document:keydown.escape')
+  onEsc(): void {
+    if (this.deleteModalOpen) this.closeDeleteModal();
+    else if (this.modalOpen) this.closeModal();
   }
 }

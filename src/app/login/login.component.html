@@ -8,7 +8,12 @@
     <form [formGroup]="form" (ngSubmit)="submit()" class="form">
       <label class="field">
         <span>Email</span>
-        <input type="email" formControlName="email" placeholder="nome@email.it" autocomplete="username" />
+        <input
+          type="email"
+          formControlName="email"
+          placeholder="nome@email.it"
+          autocomplete="username"
+        />
         <small class="error" *ngIf="form.controls.email.touched && form.controls.email.invalid">
           Inserisci una email valida.
         </small>
@@ -16,7 +21,12 @@
 
       <label class="field">
         <span>Password</span>
-        <input type="password" formControlName="password" placeholder="••••••••" autocomplete="current-password" />
+        <input
+          type="password"
+          formControlName="password"
+          placeholder="••••••••"
+          autocomplete="current-password"
+        />
         <small class="error" *ngIf="form.controls.password.touched && form.controls.password.invalid">
           Inserisci la password.
         </small>
@@ -27,6 +37,12 @@
       <button class="btn" type="submit" [disabled]="loading">
         {{ loading ? 'Accesso in corso…' : 'Login' }}
       </button>
+
+      <div class="forgot-row">
+        <button type="button" class="link-btn" (click)="openForgot()">
+          Password dimenticata?
+        </button>
+      </div>
     </form>
 
     <div class="card__footer">
@@ -34,39 +50,50 @@
     </div>
   </div>
 </div>
-<div class="login-page">
-  <div class="card">
-    <div class="card__header">
-      <h1>Accedi</h1>
-      <p>Area Backoffice Impronta Studentesca</p>
+
+<!-- MODAL recupero password -->
+<div class="modal" *ngIf="forgotOpen" (click)="closeForgot()">
+  <div class="modal__panel" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="modal__header">
+      <h2>Recupero password</h2>
+      <button type="button" class="icon-btn" (click)="closeForgot()" aria-label="Chiudi">✕</button>
     </div>
 
-    <form [formGroup]="form" (ngSubmit)="submit()" class="form">
+    <p class="modal__subtitle">
+      Inserisci la tua email: riceverai un link per modificare la password.
+    </p>
+
+    <div class="success-banner" *ngIf="forgotSuccess">
+      Se l’email è registrata, ti abbiamo inviato un link per modificare la password.
+    </div>
+
+    <div class="error-banner" *ngIf="forgotErrorMsg">{{ forgotErrorMsg }}</div>
+
+    <form class="form" [formGroup]="forgotForm" (ngSubmit)="submitForgot()" *ngIf="!forgotSuccess">
       <label class="field">
         <span>Email</span>
-        <input type="email" formControlName="email" placeholder="nome@email.it" autocomplete="username" />
-        <small class="error" *ngIf="form.controls.email.touched && form.controls.email.invalid">
+        <input
+          type="email"
+          formControlName="email"
+          placeholder="nome@email.it"
+          autocomplete="email"
+        />
+        <small class="error" *ngIf="forgotForm.controls.email.touched && forgotForm.controls.email.invalid">
           Inserisci una email valida.
         </small>
       </label>
 
-      <label class="field">
-        <span>Password</span>
-        <input type="password" formControlName="password" placeholder="••••••••" autocomplete="current-password" />
-        <small class="error" *ngIf="form.controls.password.touched && form.controls.password.invalid">
-          Inserisci la password.
-        </small>
-      </label>
+      <button class="btn" type="submit" [disabled]="forgotLoading">
+        {{ forgotLoading ? 'Invio…' : 'Invia link' }}
+      </button>
 
-      <div class="error-banner" *ngIf="errorMsg">{{ errorMsg }}</div>
-
-      <button class="btn" type="submit" [disabled]="loading">
-        {{ loading ? 'Accesso in corso…' : 'Login' }}
+      <button type="button" class="btn btn--ghost" (click)="closeForgot()" [disabled]="forgotLoading">
+        Annulla
       </button>
     </form>
 
-    <div class="card__footer">
-      <a routerLink="/" class="link">Torna alla home</a>
+    <div class="modal__actions" *ngIf="forgotSuccess">
+      <button type="button" class="btn" (click)="closeForgot()">Chiudi</button>
     </div>
   </div>
 </div>
