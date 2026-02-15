@@ -69,6 +69,8 @@ export class StaffComponent implements OnInit, OnDestroy {
 
   private brokenPhotos = new Set<number>();
 
+  exportingExcel = false;
+
   // AUTH
   currentUser$: Observable<CurrentUserLite> = this.auth.currentUser$ as Observable<CurrentUserLite>;
 
@@ -467,5 +469,35 @@ export class StaffComponent implements OnInit, OnDestroy {
       fallback
     );
   }
+
+  downloadAssociatiExcel(): void {
+    this.errorMsg = '';
+
+    this.exportingExcel = true;
+
+    this.adminService
+      .staffExcell()
+      .pipe(finalize(() => (this.exportingExcel = false)))
+      .subscribe({
+        next: (dto) => {
+          const url =
+            dto?.downloadDirectUrl ||
+            dto?.webContentLink ||
+            dto?.webViewLink;
+
+          if (!url) {
+            this.errorMsg = 'Link del documento non disponibile.';
+            return;
+          }
+
+          // Download diretto dal browser (senza passare dal BE)
+          window.open(url, '_blank', 'noopener');
+        },
+        error: (err) => {
+          this.errorMsg = this.extractApiMessage(err, 'Errore durante il download dell’export.');
+        },
+      });
+  }
+
 
 }

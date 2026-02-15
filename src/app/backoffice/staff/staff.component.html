@@ -9,11 +9,23 @@
     </div>
 
     <ng-container *ngIf="isDirettivo$ | async">
-      <button class="btn btn--primary" type="button" (click)="openCreate()">
-        + Nuova persona
-      </button>
+      <div class="head-actions">
+        <button
+          class="btn btn--ghost"
+          type="button"
+          (click)="downloadAssociatiExcel()"
+          [disabled]="exportingExcel"
+        >
+          {{ exportingExcel ? 'Preparazione…' : 'Scarica associati (Excel)' }}
+        </button>
+
+        <button class="btn btn--primary" type="button" (click)="openCreate()">
+          + Nuova persona
+        </button>
+      </div>
     </ng-container>
   </div>
+
 
   <div class="filters">
     <div class="field">

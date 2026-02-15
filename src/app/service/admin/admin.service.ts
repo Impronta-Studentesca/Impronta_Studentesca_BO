@@ -11,6 +11,7 @@ import {
   PersonaDirettivoRequestDTO,
   PersonaDirettivoResponseDTO
 } from '../../model/direttivo.model';
+import {DocumentoLinkResponseDTO} from "../../model/documento.model";
 
 /** Lite per organi (lasciato come avevi) */
 export interface OrganoRappresentanzaLiteDTO {
@@ -160,5 +161,11 @@ export class AdminService {
     const baseUrl = apiUrl(environment.api.adminPath, 'persona', personaId, 'rappresentante');
     const url = `${baseUrl}?nome=${encodeURIComponent(nomeRappresentanza)}`;
     return this.http.delete<void>(url, { withCredentials: true });
+  }
+
+  /** GET /{BASE}/admin/documenti/staff/excell */
+  staffExcell(): Observable<DocumentoLinkResponseDTO> {
+    const url = apiUrl(environment.api.adminPath, 'documenti', environment.api.staffPath, 'excell');
+    return this.http.get<DocumentoLinkResponseDTO>(url, { withCredentials: true });
   }
 }

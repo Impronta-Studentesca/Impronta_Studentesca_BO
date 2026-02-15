@@ -1,0 +1,30 @@
+.dashboard-coming-soon{
+  height: calc(100vh - 64px); /* se hai una navbar; se non ce l'hai metti 100vh */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.subtitle{
+  margin: 0;
+  opacity: .75;
+}
+
+
+.badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 193, 7, .15);
+  border: 1px solid rgba(255, 193, 7, .35);
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.desc {
+  margin: 0;
+  line-height: 1.4;
+  opacity: .9;
+}
