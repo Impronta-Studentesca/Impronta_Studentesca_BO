@@ -2,7 +2,7 @@ export const environment = {
   production: true,
 
   // Cambia con il dominio/route reale in prod
-  apiHost: 'https://TUO-DOMINIO',
+  apiHost: 'https://impronta-studentesca-be.onrender.com',
 
   api: {
     basePath: 'impronta/studentesca/official/api',
