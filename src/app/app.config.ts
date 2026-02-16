@@ -4,7 +4,6 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
 
-import { WithCredentialsInterceptor } from './service/auth/with-credentials.interceptor';
 import {HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {AuthErrorInterceptor} from "./core/interceptors/auth-error.interceptor";
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -21,7 +20,6 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     importProvidersFrom(MatSnackBarModule),
 
-    { provide: HTTP_INTERCEPTORS, useClass: WithCredentialsInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: AuthErrorInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true }
   ]
