@@ -9,4 +9,5 @@ export interface LoginResponseDTO {
   cognome: string;
   email: string;
   ruoli: string[];
+  token: string
 }

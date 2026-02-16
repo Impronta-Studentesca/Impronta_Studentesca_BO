@@ -17,28 +17,19 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   login(dto: LoginRequestDTO): Observable<LoginResponseDTO> {
-    // impronta/studentesca/official/api/auth/login
     const url = apiUrl(environment.api.authPath, 'login');
 
     return this.http
-      .post<LoginResponseDTO>(url, dto, { withCredentials: true })
+      .post<LoginResponseDTO>(url, dto) // ✅ niente withCredentials
       .pipe(tap((user) => this.setCurrentUser(user)));
   }
 
-  logout(): Observable<void> {
-    const url = apiUrl(environment.api.authPath, 'logout');
 
-    return this.http
-      .post<void>(url, null, { withCredentials: true })
-      .pipe(
-        tap(() => this.clearLocalUser()),
-        catchError(() => {
-          // anche se il backend fallisce, chiudiamo UI localmente
-          this.clearLocalUser();
-          return of(void 0);
-        })
-      );
+  logout(): Observable<void> {
+    this.clearLocalUser();
+    return of(void 0);
   }
+
 
   /**
    * POST /auth/persona/{personaId}/crea/password
@@ -100,6 +91,6 @@ export class AuthService {
   richiestaModificaPassword(email: string): Observable<void> {
     const safeEmail = encodeURIComponent(email.trim());
     const url = apiUrl(environment.api.authPath, 'richiesta', 'modifica', 'password', safeEmail);
-    return this.http.get<void>(url, { withCredentials: true });
+    return this.http.get<void>(url);
   }
 }
