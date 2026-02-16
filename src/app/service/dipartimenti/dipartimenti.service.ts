@@ -27,19 +27,19 @@ export class DipartimentiService {
       environment.api.dipartimentiPath,
       environment.api.allPath
     );
-    return this.http.get<DipartimentoDTO[]>(url, { withCredentials: true });
+    return this.http.get<DipartimentoDTO[]>(url);
   }
 
   /** POST /{BASE}/admin/dipartimento */
   create(dto: DipartimentoRequestDTO): Observable<DipartimentoDTO> {
     const url = apiUrl(environment.api.adminPath, environment.api.dipartimentoPath);
-    return this.http.post<DipartimentoDTO>(url, dto, { withCredentials: true });
+    return this.http.post<DipartimentoDTO>(url, dto);
   }
 
   /** PUT /{BASE}/admin/dipartimento */
   update(dto: DipartimentoRequestDTO): Observable<DipartimentoDTO> {
     const url = apiUrl(environment.api.adminPath, environment.api.dipartimentoPath);
-    return this.http.put<DipartimentoDTO>(url, dto, { withCredentials: true });
+    return this.http.put<DipartimentoDTO>(url, dto);
   }
 
   /** DELETE /{BASE}/admin/dipartimento (body) */

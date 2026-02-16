@@ -22,7 +22,7 @@ export class CorsiService {
       String(dipartimentoId),
       environment.api.corsiPath
     );
-    return this.http.get<CorsoDiStudiResponseDTO[]>(url, { withCredentials: true });
+    return this.http.get<CorsoDiStudiResponseDTO[]>(url);
   }
 
   /** GET /public/corso/{corsoId} */
@@ -32,7 +32,7 @@ export class CorsiService {
       environment.api.corsoPath,
       String(corsoId)
     );
-    return this.http.get<CorsoDiStudiResponseDTO>(url, { withCredentials: true });
+    return this.http.get<CorsoDiStudiResponseDTO>(url);
   }
 
   /** GET /public/persona/{personaId}/corso */
@@ -43,7 +43,7 @@ export class CorsiService {
       String(personaId),
       environment.api.corsoPath
     );
-    return this.http.get<CorsoDiStudiResponseDTO>(url, { withCredentials: true });
+    return this.http.get<CorsoDiStudiResponseDTO>(url);
   }
 
   // ---------- ADMIN ----------
@@ -51,13 +51,13 @@ export class CorsiService {
   /** POST /admin/corso */
   create(dto: CorsoDiStudiRequestDTO): Observable<CorsoDiStudiResponseDTO> {
     const url = apiUrl(environment.api.adminPath, environment.api.corsoPath);
-    return this.http.post<CorsoDiStudiResponseDTO>(url, dto, { withCredentials: true });
+    return this.http.post<CorsoDiStudiResponseDTO>(url, dto);
   }
 
   /** PUT /admin/corso */
   update(dto: CorsoDiStudiRequestDTO): Observable<CorsoDiStudiResponseDTO> {
     const url = apiUrl(environment.api.adminPath, environment.api.corsoPath);
-    return this.http.put<CorsoDiStudiResponseDTO>(url, dto, { withCredentials: true });
+    return this.http.put<CorsoDiStudiResponseDTO>(url, dto);
   }
 
   /** DELETE /admin/corso (body) */

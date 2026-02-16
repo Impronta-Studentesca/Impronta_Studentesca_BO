@@ -15,19 +15,19 @@ export class StaffService {
 
   getStaff(): Observable<StaffCardDTO[]> {
     const url = apiUrl(environment.api.staffPath, 'all'); // es. '/staff'
-    return this.http.get<StaffCardDTO[]>(url, { withCredentials: true });
+    return this.http.get<StaffCardDTO[]>(url);
   }
 
   /** ANAGRAFICA: PUT /admin/persona */
   updatePersonaAnagrafica(payload: PersonaRequestDTO): Observable<PersonaResponseDTO> {
     const url = apiUrl(environment.api.staffPath, 'persona'); // es. /admin/persona
-    return this.http.put<PersonaResponseDTO>(url, payload, { withCredentials: true });
+    return this.http.put<PersonaResponseDTO>(url, payload);
   }
 
   /** ANAGRAFICA: DELETE /admin/persona/{personaId} */
   deletePersona(personaId: number): Observable<void> {
     const url = apiUrl(environment.api.staffPath, 'persona', personaId); // es. /admin/persona/123
-    return this.http.delete<void>(url, { withCredentials: true });
+    return this.http.delete<void>(url);
   }
 
   /** POST /staff/persona/{id}/photo (upload foto) */
@@ -35,12 +35,12 @@ export class StaffService {
     const url = apiUrl(environment.api.staffPath, `persona/${personaId}/foto`);
     const fd = new FormData();
     fd.append('file', file);
-    return this.http.post<void>(url, fd, { withCredentials: true });
+    return this.http.post<void>(url, fd);
   }
 
   deleteFotoPersona(personaId: number) {
     const url = apiUrl(environment.api.staffPath, environment.api.personaPath, personaId, 'foto');
-    return this.http.delete<void>(url, { withCredentials: true });
+    return this.http.delete<void>(url);
   }
 
 }

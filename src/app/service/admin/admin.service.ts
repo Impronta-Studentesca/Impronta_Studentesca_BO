@@ -43,7 +43,7 @@ export class AdminService {
   /** POST /{BASE}/admin/persona */
   createPersona(dto: PersonaRequestDTO): Observable<PersonaResponseDTO> {
     const url = apiUrl(environment.api.adminPath, environment.api.personaPath);
-    return this.http.post<PersonaResponseDTO>(url, dto, { withCredentials: true });
+    return this.http.post<PersonaResponseDTO>(url, dto);
   }
 
   // ---------------- DIRETTIVI (LISTA) ----------------
@@ -55,7 +55,7 @@ export class AdminService {
   getDirettivi(): Observable<DirettivoResponseDTO[]> {
     const direttiviPath = (environment.api as any).direttiviPath ?? 'direttivi';
     const url = apiUrl(environment.api.publicPath, direttiviPath);
-    return this.http.get<DirettivoResponseDTO[]>(url, { withCredentials: true });
+    return this.http.get<DirettivoResponseDTO[]>(url);
   }
 
   // ---------------- DIRETTIVO (CRUD) ----------------
@@ -65,7 +65,7 @@ export class AdminService {
    */
   creaDirettivo(dto: DirettivoRequestDTO): Observable<void> {
     const url = apiUrl(environment.api.adminPath, environment.api.direttivoPath);
-    return this.http.post<void>(url, dto, { withCredentials: true });
+    return this.http.post<void>(url, dto);
   }
 
   /**
@@ -74,7 +74,7 @@ export class AdminService {
    */
   aggiornaDirettivo(dto: DirettivoRequestDTO): Observable<void> {
     const url = apiUrl(environment.api.adminPath, environment.api.direttivoPath);
-    return this.http.put<void>(url, dto, { withCredentials: true });
+    return this.http.put<void>(url, dto);
   }
 
   /**
@@ -83,7 +83,7 @@ export class AdminService {
    */
   eliminaDirettivo(direttivoId: number): Observable<void> {
     const url = apiUrl(environment.api.adminPath, environment.api.direttivoPath, direttivoId);
-    return this.http.delete<void>(url, { withCredentials: true });
+    return this.http.delete<void>(url);
   }
 
   // ---------------- PERSONE NEL DIRETTIVO ----------------
@@ -92,7 +92,7 @@ export class AdminService {
    */
   assegnaPersonaADirettivo(dto: PersonaDirettivoRequestDTO): Observable<void> {
     const url = apiUrl(environment.api.adminPath, environment.api.direttivoPath, environment.api.personaPath);
-    return this.http.post<void>(url, dto, { withCredentials: true });
+    return this.http.post<void>(url, dto);
   }
 
   /**
@@ -100,7 +100,7 @@ export class AdminService {
    */
   modificaPersonaADirettivo(dto: PersonaDirettivoRequestDTO): Observable<void> {
     const url = apiUrl(environment.api.adminPath, environment.api.direttivoPath, environment.api.personaPath);
-    return this.http.put<void>(url, dto, { withCredentials: true });
+    return this.http.put<void>(url, dto);
   }
 
   getPersoneByRuoloNonPresentiNelDirettivo(ruolo: Ruolo | string, direttivoId: number): Observable<PersonaMiniDTO[]> {
@@ -113,7 +113,7 @@ export class AdminService {
       direttivoId
     );
 
-    return this.http.get<PersonaMiniDTO[]>(url, { withCredentials: true });
+    return this.http.get<PersonaMiniDTO[]>(url);
   }
 
   /**
@@ -127,7 +127,7 @@ export class AdminService {
       personaId,
       direttivoId
     );
-    return this.http.delete<void>(url, { withCredentials: true });
+    return this.http.delete<void>(url);
   }
 
   /**
@@ -135,7 +135,7 @@ export class AdminService {
    */
   getMembriDirettivo(direttivoId: number): Observable<PersonaDirettivoResponseDTO[]> {;
     const url = apiUrl(environment.api.publicPath, environment.api.direttivoPath, direttivoId, environment.api.personePath);
-    return this.http.get<PersonaDirettivoResponseDTO[]>(url, { withCredentials: true });
+    return this.http.get<PersonaDirettivoResponseDTO[]>(url);
   }
 
 
@@ -144,28 +144,28 @@ export class AdminService {
   getOrganiAll(): Observable<OrganoRappresentanzaLiteDTO[]> {
     const organiPath = (environment.api as any).organiPath ?? 'organi';
     const url = apiUrl(environment.api.adminPath, organiPath);
-    return this.http.get<OrganoRappresentanzaLiteDTO[]>(url, { withCredentials: true });
+    return this.http.get<OrganoRappresentanzaLiteDTO[]>(url);
   }
 
   assegnaPersonaAOrgano(dto: PersonaRappresentanzaRequestDTO): Observable<void> {
     const url = apiUrl(environment.api.adminPath, environment.api.rappresentantePath);
-    return this.http.post<void>(url, dto, { withCredentials: true });
+    return this.http.post<void>(url, dto);
   }
 
   modificaPersonaAOrgano(dto: PersonaRappresentanzaRequestDTO): Observable<void> {
     const url = apiUrl(environment.api.adminPath, environment.api.rappresentantePath);
-    return this.http.put<void>(url, dto, { withCredentials: true });
+    return this.http.put<void>(url, dto);
   }
 
   eliminaPersonaRappresentanzaByNome(personaId: number, nomeRappresentanza: string): Observable<void> {
     const baseUrl = apiUrl(environment.api.adminPath, 'persona', personaId, 'rappresentante');
     const url = `${baseUrl}?nome=${encodeURIComponent(nomeRappresentanza)}`;
-    return this.http.delete<void>(url, { withCredentials: true });
+    return this.http.delete<void>(url);
   }
 
   /** GET /{BASE}/admin/documenti/staff/excell */
   staffExcell(): Observable<DocumentoLinkResponseDTO> {
     const url = apiUrl(environment.api.adminPath, 'documenti', environment.api.staffPath, 'excell');
-    return this.http.get<DocumentoLinkResponseDTO>(url, { withCredentials: true });
+    return this.http.get<DocumentoLinkResponseDTO>(url);
   }
 }
