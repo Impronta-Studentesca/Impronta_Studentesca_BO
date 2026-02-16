@@ -4,6 +4,12 @@ import {loginGuard} from "./service/auth/login.guard";
 import {PasswordSetPageComponent} from "./password-set-page/password-set-page.component";
 
 export const routes: Routes = [
+
+  {
+    path: 'password/:action/:personaId',
+    component: PasswordSetPageComponent,
+    title: 'password',
+  },
   {
     path: 'backoffice',
     canActivate: [authGuard],
@@ -18,10 +24,6 @@ export const routes: Routes = [
     canActivate: [loginGuard],
     loadComponent: () => import('./welcome/welcome.component').then(m => m.WelcomeComponent),
   },
-  {
-    path: 'password/:action/:personaId',
-    component: PasswordSetPageComponent,
-    title: 'password',
-  },
+
 ];
 
