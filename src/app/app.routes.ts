@@ -25,5 +25,8 @@ export const routes: Routes = [
     loadComponent: () => import('./welcome/welcome.component').then(m => m.WelcomeComponent),
   },
 
+  { path: 'index.html', redirectTo: '', pathMatch: 'full' },
+  { path: '**', redirectTo: '', pathMatch: 'full' },
+
 ];
 
