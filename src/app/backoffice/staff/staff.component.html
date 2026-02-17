@@ -13,6 +13,7 @@
         <button
           class="btn btn--ghost"
           type="button"
+          style="background: green; color: white"
           (click)="downloadAssociatiExcel()"
           [disabled]="exportingExcel"
         >
@@ -214,7 +215,7 @@
 
       <label class="field">
         <span>Anno di corso</span>
-        <input type="number" formControlName="annoCorso" placeholder="Es. 1" min="1" max="10" />
+        <input type="number" formControlName="annoCorso" placeholder="1" min="1" max="10" />
       </label>
 
       <label class="check">
