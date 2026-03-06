@@ -22,7 +22,10 @@ export interface PersonaRequestDTO {
 
   nome: string;
   cognome: string;
+  matricola: string;
+  numeroTelefono: string;
   email: string;
+  mailUnipa: string;
 
   corsoDiStudiId?: number | null;
   annoCorso?: number | null;
@@ -39,8 +42,10 @@ export interface PersonaResponseDTO {
 
   nome: string;
   cognome: string;
-
+  numeroTelefono: string;
   corsoDiStudi?: any;
   annoCorso?: number | null;
   ufficio?: any;
+
+
 }

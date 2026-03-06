@@ -123,9 +123,24 @@
             <input formControlName="cognome" />
           </label>
 
+          <label class="field" [class.invalid]="form.controls.matricola.touched && form.controls.matricola.invalid">
+            <span>Matricola</span>
+            <input formControlName="matricola" />
+          </label>
+
+          <label class="field" [class.invalid]="form.controls.numeroTelefono.touched && form.controls.numeroTelefono.invalid">
+            <span>Numero di telefono</span>
+            <input formControlName="numeroTelefono" />
+          </label>
+
           <label class="field" [class.invalid]="form.controls.email.touched && form.controls.email.invalid">
-            <span>Email</span>
+            <span>Email personale</span>
             <input formControlName="email" />
+          </label>
+
+          <label class="field" [class.invalid]="form.controls.mailUnipa.touched && form.controls.mailUnipa.invalid">
+            <span>Email universitaria</span>
+            <input formControlName="mailUnipa" />
           </label>
 
           <label class="field" [class.invalid]="form.controls.dipartimentoId.touched && form.controls.dipartimentoId.invalid">

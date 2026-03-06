@@ -22,7 +22,7 @@ export interface CorsoDiStudiResponseDTO {
   id: number;
   nome: string;
   tipoCorso: TipoCorso;
-  dipartimento?: DipartimentoDTO; // nel BE può essere null
+  dipartimento?: DipartimentoDTO | null; // nel BE può essere null
 }
 
 export const TIPO_CORSO_LABEL: Record<TipoCorso, string> = {

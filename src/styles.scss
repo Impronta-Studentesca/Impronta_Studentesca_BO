@@ -1,37 +1,27 @@
-/* styles.scss */
 @import '@angular/material/prebuilt-themes/azure-blue.css';
+
+/* Reset base */
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
 html, body {
-  height: 100%;
+  min-height: 100%;
+  margin: 0;
 }
 
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  color: #10122a;
-}
-
-/* Reset base */
-*, *::before, *::after { box-sizing: border-box; }
-
-html, body { height: 100%; }
-
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  color: #10122a;
-
-  /* ✅ celestino elegante */
-  background:
+html {
+  background-color: #f8fbff;
+  background-image:
     radial-gradient(1200px 600px at 20% 15%, rgba(47, 91, 255, .10), transparent 60%),
     radial-gradient(900px 500px at 80% 30%, rgba(229, 57, 53, .06), transparent 55%),
     linear-gradient(180deg, #f3f8ff 0%, #eef5ff 35%, #f8fbff 100%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%, 100% 100%, 100% 100%;
 }
 
-
-
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body {
+  font-family: Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #10122a;
+  background: transparent;
+}

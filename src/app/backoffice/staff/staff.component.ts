@@ -67,6 +67,9 @@ export class StaffComponent implements OnInit, OnDestroy {
   errorMsg = '';
   staff: StaffCardDTO[] = [];
 
+  editDipartimentoId: number | null = null;
+  editCorsoDiStudiId: number | null = null;
+
   private brokenPhotos = new Set<number>();
 
   exportingExcel = false;
@@ -153,7 +156,10 @@ export class StaffComponent implements OnInit, OnDestroy {
   createForm = this.fb.group({
     nome: ['', [Validators.required, Validators.minLength(2)]],
     cognome: ['', [Validators.required, Validators.minLength(2)]],
+    matricola:['', [Validators.required, Validators.minLength(6), Validators.maxLength(8)]],
+    numeroTelefono:['', [Validators.required, Validators.minLength(10), Validators.maxLength(15)]],
     email: ['', [Validators.required, Validators.email]],
+    mailUnipa: ['', [Validators.required, Validators.email]],
 
     dipartimentoId: [null as number | null, Validators.required],
     corsoDiStudiId: [{ value: null as number | null, disabled: true }, Validators.required],
@@ -346,7 +352,10 @@ export class StaffComponent implements OnInit, OnDestroy {
     const payload: PersonaRequestDTO = {
       nome: v.nome!,
       cognome: v.cognome!,
+      matricola: v.matricola!,
+      numeroTelefono: v.numeroTelefono!,
       email: v.email!,
+      mailUnipa: v.mailUnipa!,
       corsoDiStudiId: v.corsoDiStudiId!,
       annoCorso: v.annoCorso ?? null,
       staff: !!v.staff,
@@ -374,9 +383,25 @@ export class StaffComponent implements OnInit, OnDestroy {
   openEdit(s: StaffCardDTO, me: CurrentUserLite, isDir: boolean): void {
     if (this.modalOpen) this.closeModal();
 
+    const corsoId = s.corsoDiStudi?.id ? Number(s.corsoDiStudi.id) : null;
+
+    const dipIdFromCard = s.corsoDiStudi?.dipartimento?.id
+      ? Number(s.corsoDiStudi.dipartimento.id)
+      : null;
+
+    const dipIdFromCourseMap = corsoId
+      ? (this.corsi.find(c => Number(c.id) === corsoId)?.dipartimentoId ?? null)
+      : null;
+
+
     this.editPersona = s;
     this.editMe = me;
     this.editIsDir = isDir;
+
+    this.editCorsoDiStudiId = corsoId;
+    this.editDipartimentoId = dipIdFromCard ?? dipIdFromCourseMap ?? null;
+
+
     this.editOpen = true;
   }
 
@@ -385,6 +410,8 @@ export class StaffComponent implements OnInit, OnDestroy {
     this.editPersona = null;
     this.editMe = null;
     this.editIsDir = false;
+    this.editDipartimentoId = null;
+    this.editCorsoDiStudiId = null;
   }
 
   onEditSaved(): void {

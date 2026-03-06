@@ -1,10 +1,23 @@
-<div class="dashboard-coming-soon">
-  <h2>Dashboard</h2>
-  <p class="subtitle">Presto disponibile</p>
+<section class="approval-box">
+  <div class="approval-box__left">
+    <p class="approval-box__label">Persone da approvare</p>
 
-  <div class="badge">🚧 In arrivo</div>
+    <ng-container *ngIf="!loadingDaApprovare; else loadingApprovalsTpl">
+      <h2 class="approval-box__count">{{ contaDaApprovare }}</h2>
+    </ng-container>
 
-  <p class="desc">
-    Stiamo lavorando alla nuova dashboard. Torna a breve: sarà disponibile presto.
-  </p>
-</div>
+    <ng-template #loadingApprovalsTpl>
+      <h2 class="approval-box__count">...</h2>
+    </ng-template>
+
+    <div class="approval-box__error" *ngIf="erroreDaApprovare">
+      {{ erroreDaApprovare }}
+    </div>
+  </div>
+
+  <div class="approval-box__right">
+    <button class="btn btn--primary" type="button" (click)="vaiADaApprovare()">
+      Visualizza
+    </button>
+  </div>
+</section>

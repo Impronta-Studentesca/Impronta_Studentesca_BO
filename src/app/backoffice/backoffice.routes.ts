@@ -8,24 +8,25 @@ export const BACKOFFICE_ROUTES: Routes = [
     loadComponent: () =>
       import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
   },
-
+  {
+    path: 'staff/approvare',
+    loadComponent: () =>
+      import('./staff-da-approvare/staff-da-approvare.component').then(m => m.StaffDaApprovareComponent),
+  },
   {
     path: 'dipartimenti',
     loadComponent: () =>
       import('./dipartimenti/dipartimenti.component').then(m => m.DipartimentiComponent),
   },
-
   {
     path: 'dipartimenti/:dipartimentoId/corsi',
     loadComponent: () => import('./corsi/corsi.component').then(m => m.CorsiComponent),
   },
-
   {
     path: 'staff',
     loadComponent: () =>
       import('./staff/staff.component').then(m => m.StaffComponent),
   },
-
   {
     path: 'direttivi',
     loadComponent: () => import('./direttivi/direttivi.component').then(m => m.DirettiviComponent),

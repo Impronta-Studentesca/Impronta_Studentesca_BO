@@ -5,6 +5,8 @@ import { LoginRequestDTO, LoginResponseDTO } from '../../model/auth.model';
 import {PasswordSetRequest} from '../../model/password.model';
 import { environment } from '../../environments/environment';
 import { apiUrl } from '../../core/api-url';
+import {PersonaRequestDTO, PersonaResponseDTO} from "../../model/persona.model";
+import {CorsoDiStudiRequestDTO} from "../../model/corsi.model";
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -93,4 +95,14 @@ export class AuthService {
     const url = apiUrl(environment.api.authPath, 'richiesta', 'modifica', 'password', safeEmail);
     return this.http.get<void>(url);
   }
+
+  /**
+   * POST /auth/persona
+   * Body: { persona: PersonaRequestDTO, corso: CorsoDiStudiRequestDTO }
+   */
+  creaPersona(persona: PersonaRequestDTO, corso: CorsoDiStudiRequestDTO | null): Observable<void> {
+    const url = apiUrl(environment.api.authPath, 'persona');
+    return this.http.post<void>(url, {persona, corso});
+  }
+
 }

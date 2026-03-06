@@ -98,8 +98,11 @@
             <div class="ig__line" *ngIf="s.corsoDiStudi">
               <span class="ig__muted" *ngIf="s.annoCorso"> • Anno {{ s.annoCorso }}</span>
             </div>
+            <div class="ig__line" *ngIf="s.numeroTelefono">
+              <span class="ig__muted"> • Telefono {{ s.numeroTelefono }}</span>
+            </div>
 
-            <div class="ig__line ig__muted" *ngIf="s.corsoDiStudi?.dipartimento?.nome">
+            <div class="ig__line ig__muted" *ngIf="s.corsoDiStudi?.dipartimento">
               {{ s.corsoDiStudi?.dipartimento?.nome }}
               <span *ngIf="s.corsoDiStudi?.dipartimento?.codice">
                 ({{ s.corsoDiStudi?.dipartimento?.codice }})
@@ -169,9 +172,24 @@
         <input formControlName="cognome" placeholder="Es. Rossi" />
       </label>
 
+      <label class="field" [class.invalid]="createForm.controls.matricola.touched && createForm.controls.matricola.invalid">
+        <span>Matricola</span>
+        <input formControlName="matricola" placeholder="0111111" />
+      </label>
+
+      <label class="field" [class.invalid]="createForm.controls.numeroTelefono.touched && createForm.controls.numeroTelefono.invalid">
+        <span>Numero di telefono</span>
+        <input formControlName="numeroTelefono" placeholder="3310000000" />
+      </label>
+
       <label class="field" [class.invalid]="createForm.controls.email.touched && createForm.controls.email.invalid">
-        <span>Email</span>
+        <span>Email personale</span>
         <input formControlName="email" placeholder="nome.cognome@email.it" />
+      </label>
+
+      <label class="field" [class.invalid]="createForm.controls.mailUnipa.touched && createForm.controls.mailUnipa.invalid">
+        <span>Email universitaria</span>
+        <input formControlName="mailUnipa" placeholder="nome.cognome@community.unipa.it" />
       </label>
 
       <label
@@ -245,6 +263,8 @@
   [persona]="editPersona!"
   [me]="editMe"
   [isDir]="editIsDir"
+  [initialDipartimentoId]="editDipartimentoId"
+  [initialCorsoDiStudiId]="editCorsoDiStudiId"
   (closed)="closeEdit()"
   (saved)="onEditSaved()"
 ></app-staff-edit-modal>

@@ -168,4 +168,18 @@ export class AdminService {
     const url = apiUrl(environment.api.adminPath, 'documenti', environment.api.staffPath, 'excell');
     return this.http.get<DocumentoLinkResponseDTO>(url);
   }
+
+  // ---------------- APPROVAZIONE PERSONE ----------------
+
+  /** PUT /{BASE}/admin/approva/persona */
+  approvaPersona(dto: PersonaRequestDTO): Observable<void> {
+    const url = apiUrl(environment.api.adminPath, 'approva', environment.api.personaPath);
+    return this.http.put<void>(url, dto);
+  }
+
+  /** PUT /{BASE}/admin/approva/all */
+  approvaTutti(persone: PersonaRequestDTO[]): Observable<void> {
+    const url = apiUrl(environment.api.adminPath, 'approva', 'all');
+    return this.http.put<void>(url, persone);
+  }
 }

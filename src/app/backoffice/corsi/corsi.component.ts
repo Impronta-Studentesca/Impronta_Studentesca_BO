@@ -7,7 +7,7 @@ import { Location } from '@angular/common';
 
 import { AuthService } from '../../service/auth/auth.service';
 import { CorsiService } from '../../service/corsi/corsi.service';
-import { CorsoDiStudiRequestDTO, CorsoDiStudiResponseDTO, TipoCorso } from '../../model/corsi.model';
+import {CorsoDiStudiRequestDTO, CorsoDiStudiResponseDTO, DipartimentoDTO, TipoCorso} from '../../model/corsi.model';
 import { TIPO_CORSO_LABEL } from '../../core/constants/tipo-corso-label';
 import {extractApiErrorMessage} from "../../core/http-error";
 
@@ -121,6 +121,7 @@ export class CorsiComponent implements OnInit {
 
     const nome = (this.form.get('nome')?.value ?? '').trim();
     const tipoCorso = this.form.get('tipoCorso')?.value as TipoCorso;
+
 
     const payload: CorsoDiStudiRequestDTO = {
       id: this.editing?.id,

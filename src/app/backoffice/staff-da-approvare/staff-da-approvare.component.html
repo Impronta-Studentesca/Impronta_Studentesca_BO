@@ -1,0 +1,90 @@
+<section class="page">
+  <div class="head">
+    <div class="left">
+      <div>
+        <h1>Persone da approvare</h1>
+        <p>Elenco persone in attesa di approvazione</p>
+      </div>
+    </div>
+
+    <ng-container *ngIf="isDirettivo$ | async">
+      <div class="head-actions">
+        <button
+          class="btn btn--primary btn--approve-all"
+          type="button"
+          (click)="approvaTutti()"
+          [disabled]="actionLoading || !persone.length"
+        >
+          {{ actionLoading ? 'Approvazione…' : 'Approva tutti' }}
+        </button>
+      </div>
+    </ng-container>
+  </div>
+
+  <div class="error" *ngIf="errorMsg">{{ errorMsg }}</div>
+  <div class="success" *ngIf="successMsg">{{ successMsg }}</div>
+
+  <div class="grid" *ngIf="!loading; else loadingTpl">
+    <ng-container *ngIf="persone.length; else emptyTpl">
+      <article class="card card--ig" *ngFor="let s of persone">
+        <div class="ig__body">
+          <h3 class="ig__name">{{ s.nome }} {{ s.cognome }}</h3>
+
+          <div class="ig__details">
+            <div class="ig__line" *ngIf="s.matricola">
+              <span class="ig__muted">Matricola {{ s.matricola }}</span>
+            </div>
+
+            <div class="ig__line" *ngIf="s.numeroTelefono">
+              <span class="ig__muted">Telefono {{ s.numeroTelefono }}</span>
+            </div>
+
+            <div class="ig__line" *ngIf="s.email">
+              <span class="ig__muted">Mail personale {{ s.email }}</span>
+            </div>
+
+            <div class="ig__line" *ngIf="s.mailUnipa">
+              <span class="ig__muted">Mail universitaria{{ s.mailUnipa }}</span>
+            </div>
+
+            <div class="ig__line ig__muted" *ngIf="s.corsoDiStudi?.dipartimento">
+              {{ s.corsoDiStudi?.dipartimento?.nome }}
+              <span *ngIf="s.corsoDiStudi?.dipartimento?.codice">
+                ({{ s.corsoDiStudi?.dipartimento?.codice }})
+              </span>
+            </div>
+
+            <div class="ig__line" *ngIf="s.corsoDiStudi">
+              <span class="ig__strong">{{ s.corsoDiStudi.nome }}</span>
+            </div>
+
+            <div class="ig__line" *ngIf="s.annoCorso != null">
+              <span class="ig__muted">• Anno {{ s.annoCorso }}</span>
+            </div>
+
+
+          </div>
+
+          <div class="ig__footer" *ngIf="isDirettivo$ | async">
+            <button
+              class="btn btn--primary btn--approve"
+              type="button"
+              (click)="approvaSingolo(s)"
+              [disabled]="actionLoading"
+            >
+              Approva
+            </button>
+          </div>
+        </div>
+      </article>
+    </ng-container>
+  </div>
+
+  <ng-template #loadingTpl>
+    <div class="loading">Caricamento…</div>
+  </ng-template>
+
+  <ng-template #emptyTpl>
+    <div class="loading">Nessuna persona da approvare.</div>
+  </ng-template>
+</section>

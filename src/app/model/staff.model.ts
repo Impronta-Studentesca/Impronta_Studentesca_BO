@@ -5,7 +5,10 @@ export interface StaffCardDTO {
   id: number;
   nome: string;
   cognome: string;
-  mail: string;
+  matricola: string;
+  numeroTelefono: string;
+  email: string;
+  mailUnipa: string;
 
   ruoli: string[];
 

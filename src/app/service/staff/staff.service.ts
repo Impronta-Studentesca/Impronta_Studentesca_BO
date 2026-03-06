@@ -43,4 +43,14 @@ export class StaffService {
     return this.http.delete<void>(url);
   }
 
+  getDaApprovare(): Observable<StaffCardDTO[]> {
+    const url = apiUrl(environment.api.staffPath, 'approvare');
+    return this.http.get<StaffCardDTO[]>(url);
+  }
+
+  getContaDaApprovare(): Observable<number> {
+    const url = apiUrl(environment.api.staffPath, 'conta', 'approvare');
+    return this.http.get<number>(url);
+  }
+
 }

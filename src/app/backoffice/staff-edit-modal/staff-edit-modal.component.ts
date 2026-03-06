@@ -28,7 +28,6 @@ import {
   PersonaRappresentanzaRequestDTO,
 } from '../../service/admin/admin.service';
 
-// ✅ CROP
 import { ImageCropperComponent, ImageCroppedEvent, ImageTransform } from 'ngx-image-cropper';
 
 type CurrentUserLite =
@@ -47,7 +46,7 @@ type CurrentUserLite =
 type TabKey = 'ANAG' | 'RAPP';
 
 type PersonaRappView = {
-  organoNome: string; // ✅ qui ci basta il nome
+  organoNome: string;
 };
 
 @Component({
@@ -67,6 +66,8 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
   @Input({ required: true }) persona!: StaffCardDTO;
   @Input({ required: true }) me!: CurrentUserLite;
   @Input() isDir = false;
+  @Input() initialDipartimentoId: number | null = null;
+  @Input() initialCorsoDiStudiId: number | null = null;
 
   @Output() closed = new EventEmitter<void>();
   @Output() saved = new EventEmitter<void>();
@@ -105,14 +106,17 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
   rappList: PersonaRappView[] = [];
 
   savingRapp = false;
-  editingRapp = false; // lasciato per compatibilità UI
+  editingRapp = false;
   private initialized = false;
 
   form = this.fb.group({
     id: [null as number | null, Validators.required],
     nome: ['', [Validators.required, Validators.minLength(2)]],
     cognome: ['', [Validators.required, Validators.minLength(2)]],
+    matricola: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(8)]],
+    numeroTelefono: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(15)]],
     email: ['', [Validators.required, Validators.email]],
+    mailUnipa: ['', [Validators.required, Validators.email]],
 
     dipartimentoId: [null as number | null, Validators.required],
     corsoDiStudiId: [{ value: null as number | null, disabled: true }, Validators.required],
@@ -122,7 +126,7 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
   });
 
   rappForm = this.fb.group({
-    personaRappresentanzaId: [null as number | null], // non lo usiamo più lato FE per delete
+    personaRappresentanzaId: [null as number | null],
     organoRappresentanzaId: [null as number | null, Validators.required],
     dataInizio: [null as string | null],
     dataFine: [null as string | null],
@@ -131,8 +135,7 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['persona'] && this.persona) {
       this.patchFromPersona();
-      this.rebuildRappFromPersona(); // ✅ importantissimo
-
+      this.rebuildRappFromPersona();
       this.resetRappForm(false);
       this.resetCropState();
 
@@ -150,10 +153,9 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
       this.patchFromPersona();
     }
 
-    this.loadDipartimenti();
     this.setupSubs();
+    this.loadDipartimenti();
 
-    // sicurezza: se NON direttivo e non è la sua card -> chiudo
     if (!this.isDir && !this.isSelf()) {
       this.closed.emit();
       return;
@@ -163,7 +165,7 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
       this.form.disable({ emitEvent: false });
     } else {
       this.loadOrganiList();
-      this.rebuildRappFromPersona(); // ✅ importantissimo
+      this.rebuildRappFromPersona();
     }
   }
 
@@ -179,7 +181,6 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
     if (!this.isDir && t !== 'ANAG') return;
     this.tab = t;
 
-    // ✅ ogni volta che apro RAPP ricostruisco lista dai dati già in persona
     if (t === 'RAPP' && this.isDir) {
       this.rebuildRappFromPersona();
     }
@@ -189,13 +190,13 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
     this.closed.emit();
   }
 
-  // ---------------- error helper ----------------
+  // ---------------- ERROR HELPER ----------------
   private extractApiMessage(err: any, fallback: string): string {
     const e = err?.error;
     return e?.message || e?.error || e?.detail || err?.message || fallback;
   }
 
-  // ---------------- PATCH INIT ----------------
+  // ---------------- SNAPSHOT ----------------
   private initialSnapshot = '';
 
   private snapshot(): void {
@@ -204,6 +205,7 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
     this.form.markAsUntouched();
   }
 
+  // ---------------- RUOLI ----------------
   private getPersonaRoles(): string[] {
     const raw =
       (this.persona as any)?.ruoli ??
@@ -224,20 +226,31 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
     return this.getPersonaRoles().some((r) => r === target || r.endsWith(`_${target}`));
   }
 
+  // ---------------- INIT FORM ----------------
   private patchFromPersona(): void {
-    const id = Number((this.persona as any)?.id ?? (this.persona as any)?.personaId);
-    const dipId = (this.persona as any)?.corsoDiStudi?.dipartimento?.id ?? null;
-    const corsoId = (this.persona as any)?.corsoDiStudi?.id ?? null;
+    const id = this.toNumberOrNull((this.persona as any)?.id ?? (this.persona as any)?.personaId);
+
+    const dipId =
+      this.initialDipartimentoId ??
+      this.toNumberOrNull((this.persona as any)?.corsoDiStudi?.dipartimento?.id);
+
+    const corsoId =
+      this.initialCorsoDiStudiId ??
+      this.toNumberOrNull((this.persona as any)?.corsoDiStudi?.id);
 
     const email = String((this.persona as any)?.mail ?? (this.persona as any)?.email ?? '');
+    const mailUnipa = String((this.persona as any)?.mailUnipa ?? (this.persona as any)?.emailUnipa ?? '');
     const staffFlag = this.personaHasRole('STAFF');
 
     this.form.patchValue(
       {
-        id: Number.isFinite(id) ? id : null,
+        id,
         nome: (this.persona as any)?.nome ?? '',
         cognome: (this.persona as any)?.cognome ?? '',
+        matricola: (this.persona as any)?.matricola ?? '',
+        numeroTelefono: (this.persona as any)?.numeroTelefono ?? '',
         email,
+        mailUnipa,
         dipartimentoId: dipId,
         corsoDiStudiId: corsoId,
         annoCorso: (this.persona as any)?.annoCorso ?? null,
@@ -247,18 +260,10 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
     );
 
     this.form.controls.corsoDiStudiId.disable({ emitEvent: false });
+    this.selectedCorso = null;
+
     this.snapshot();
-  }
 
-  private loadDipartimenti(): void {
-    this.dipLoadSub?.unsubscribe();
-    this.dipLoadSub = this.dipSvc.getAll().subscribe({
-      next: (d) => (this.dipList = d ?? []),
-      error: (err) => (this.errorMsg = this.extractApiMessage(err, 'Errore durante il caricamento dei dipartimenti.')),
-    });
-
-    const dipId = this.form.controls.dipartimentoId.value;
-    if (dipId) this.loadCorsi(dipId, true);
   }
 
   private setupSubs(): void {
@@ -271,12 +276,38 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
       this.form.controls.corsoDiStudiId.disable({ emitEvent: false });
 
       if (!dipId) return;
+
       this.loadCorsi(dipId, false);
     });
 
     this.corsoSub?.unsubscribe();
     this.corsoSub = this.form.controls.corsoDiStudiId.valueChanges.subscribe(() => {
       this.syncSelectedCorso();
+    });
+  }
+
+  private loadDipartimenti(): void {
+    this.dipLoadSub?.unsubscribe();
+    this.dipLoadSub = this.dipSvc.getAll().subscribe({
+      next: (d) => {
+        this.dipList = d ?? [];
+
+        const resolvedDipId = this.resolvePersonaDipartimentoId();
+
+        this.form.controls.dipartimentoId.setValue(resolvedDipId, { emitEvent: false });
+
+        this.corsiList = [];
+        this.selectedCorso = null;
+        this.form.controls.corsoDiStudiId.reset(null, { emitEvent: false });
+        this.form.controls.corsoDiStudiId.disable({ emitEvent: false });
+
+        if (resolvedDipId) {
+          this.loadCorsi(resolvedDipId, true);
+        }
+      },
+      error: (err) => {
+        this.errorMsg = this.extractApiMessage(err, 'Errore durante il caricamento dei dipartimenti.');
+      },
     });
   }
 
@@ -290,16 +321,111 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
       .subscribe({
         next: (c) => {
           this.corsiList = c ?? [];
-          if (this.corsiList.length > 0) this.form.controls.corsoDiStudiId.enable({ emitEvent: false });
-          if (keepSelection) this.syncSelectedCorso();
+
+          if (this.corsiList.length > 0) {
+            this.form.controls.corsoDiStudiId.enable({ emitEvent: false });
+          } else {
+            this.form.controls.corsoDiStudiId.disable({ emitEvent: false });
+          }
+
+          const resolvedCorsoId = keepSelection ? this.resolvePersonaCorsoId() : null;
+
+          this.form.controls.corsoDiStudiId.setValue(resolvedCorsoId, { emitEvent: false });
+          this.syncSelectedCorso();
         },
-        error: (err) => (this.errorMsg = this.extractApiMessage(err, 'Errore durante il caricamento dei corsi di studio.')),
+        error: (err) => {
+          this.errorMsg = this.extractApiMessage(err, 'Errore durante il caricamento dei corsi di studio.');
+        },
       });
   }
 
   private syncSelectedCorso(): void {
     const id = this.form.controls.corsoDiStudiId.value;
-    this.selectedCorso = id ? this.corsiList.find((c) => c.id === id) ?? null : null;
+    this.selectedCorso = id ? this.corsiList.find((c) => Number(c.id) === Number(id)) ?? null : null;
+  }
+
+  // ---------------- RISOLUZIONE PRESELEZIONE ----------------
+  private normalize(value: unknown): string {
+    return String(value ?? '').trim().toLowerCase();
+  }
+
+  private toNumberOrNull(value: unknown): number | null {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  private resolvePersonaDipartimentoId(): number | null {
+    console.log('resolve initialDipartimentoId', this.initialDipartimentoId);
+
+    if (
+      this.initialDipartimentoId &&
+      this.dipList.some(d => Number(d.id) === Number(this.initialDipartimentoId))
+    ) {
+      console.log('resolve by initialDipartimentoId OK');
+      return Number(this.initialDipartimentoId);
+    }
+
+    const rawId = this.toNumberOrNull((this.persona as any)?.corsoDiStudi?.dipartimento?.id);
+    console.log('resolve raw dip id from persona', rawId);
+
+    if (rawId && this.dipList.some(d => Number(d.id) === rawId)) {
+      console.log('resolve by raw persona dip id OK');
+      return rawId;
+    }
+
+    const personaDipNome = this.normalize((this.persona as any)?.corsoDiStudi?.dipartimento?.nome);
+    const personaDipCodice = this.normalize((this.persona as any)?.corsoDiStudi?.dipartimento?.codice);
+
+    console.log('resolve personaDipNome', personaDipNome);
+    console.log('resolve personaDipCodice', personaDipCodice);
+
+    const foundExact = this.dipList.find(
+      d =>
+        this.normalize(d.nome) === personaDipNome &&
+        this.normalize(d.codice) === personaDipCodice
+    );
+
+    console.log('resolve foundExact', foundExact);
+
+    if (foundExact) return foundExact.id;
+
+    const foundByName = this.dipList.filter(d => this.normalize(d.nome) === personaDipNome);
+    console.log('resolve foundByName', foundByName);
+
+    if (foundByName.length === 1) return foundByName[0].id;
+
+    return null;
+  }
+
+  private resolvePersonaCorsoId(): number | null {
+    if (
+      this.initialCorsoDiStudiId &&
+      this.corsiList.some(c => Number(c.id) === Number(this.initialCorsoDiStudiId))
+    ) {
+      return Number(this.initialCorsoDiStudiId);
+    }
+
+    const rawId = this.toNumberOrNull((this.persona as any)?.corsoDiStudi?.id);
+    if (rawId && this.corsiList.some(c => Number(c.id) === rawId)) {
+      return rawId;
+    }
+
+    const personaCorsoNome = this.normalize((this.persona as any)?.corsoDiStudi?.nome);
+    const personaTipoCorso = (this.persona as any)?.corsoDiStudi?.tipoCorso ?? null;
+
+    if (!personaCorsoNome) return null;
+
+    const foundExact = this.corsiList.find(
+      c =>
+        this.normalize(c.nome) === personaCorsoNome &&
+        (c.tipoCorso ?? null) === personaTipoCorso
+    );
+    if (foundExact) return foundExact.id;
+
+    const foundByName = this.corsiList.filter(c => this.normalize(c.nome) === personaCorsoNome);
+    if (foundByName.length === 1) return foundByName[0].id;
+
+    return null;
   }
 
   // ---------------- PERMESSI ----------------
@@ -321,7 +447,7 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
     return Number.isFinite(n) ? n : null;
   }
 
-  // ---------------- FOTO (CROP) ----------------
+  // ---------------- FOTO ----------------
   onPickPhoto(ev: Event): void {
     this.errorMsg = '';
     const file = (ev.target as HTMLInputElement)?.files?.[0] ?? null;
@@ -392,23 +518,54 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
           this.resetCropState();
           this.saved.emit();
         },
-        error: (err) => (this.errorMsg = this.extractApiMessage(err, 'Errore durante l’upload della foto.')),
+        error: (err) => {
+          this.errorMsg = this.extractApiMessage(err, 'Errore durante l’upload della foto.');
+        },
       });
   }
 
-  // ---------------- RAPPRESENTANZE ----------------
+  deletePhoto(): void {
+    this.errorMsg = '';
+
+    const personaId = this.form.controls.id.value;
+    if (!personaId) return;
+
+    if (!this.isDir && !this.isSelf()) return;
+
+    const hasPhoto = !!(this.persona?.fotoThumbnailUrl || this.persona?.fotoUrl);
+    if (!hasPhoto) return;
+
+    const ok = confirm('Vuoi davvero eliminare la foto?');
+    if (!ok) return;
+
+    this.savingPhoto = true;
+
+    this.staffSvc
+      .deleteFotoPersona(personaId)
+      .pipe(finalize(() => (this.savingPhoto = false)))
+      .subscribe({
+        next: () => {
+          (this.persona as any).fotoUrl = '';
+          (this.persona as any).fotoThumbnailUrl = '';
+          this.resetCropState();
+          this.saved.emit();
+        },
+        error: (err) => {
+          this.errorMsg = this.extractApiMessage(err, 'Errore durante l’eliminazione della foto.');
+        },
+      });
+  }
+
+  // ---------------- ORGANI / RAPPRESENTANZE ----------------
   private loadOrganiList(): void {
     if (!this.isDir) return;
+
     this.adminSvc.getOrganiAll().subscribe({
       next: (x) => (this.organiList = x ?? []),
       error: () => (this.organiList = []),
     });
   }
 
-  /**
-   * ✅ FIX: costruisce SEMPRE la lista da ciò che hai già sulla persona,
-   * anche se sono solo stringhe (badge) come nella card.
-   */
   private rebuildRappFromPersona(): void {
     const raw =
       (this.persona as any)?.rappresentanze ??
@@ -421,13 +578,11 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
       return;
     }
 
-    // caso principale: array di stringhe (badge)
     if (raw.every((x: any) => typeof x === 'string')) {
       const names = (raw as string[])
         .map((s) => String(s ?? '').trim())
         .filter(Boolean);
 
-      // unique case-insensitive
       const seen = new Set<string>();
       const uniq = names.filter((n) => {
         const k = n.toLowerCase();
@@ -440,9 +595,16 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
       return;
     }
 
-    // fallback: array di oggetti -> provo a tirar fuori un nome
     const names = raw
-      .map((x: any) => String(x?.organoNome ?? x?.nome ?? x?.organo?.nome ?? x?.organoRappresentanza?.nome ?? '').trim())
+      .map((x: any) =>
+        String(
+          x?.organoNome ??
+          x?.nome ??
+          x?.organo?.nome ??
+          x?.organoRappresentanza?.nome ??
+          ''
+        ).trim()
+      )
       .filter(Boolean);
 
     const seen = new Set<string>();
@@ -456,9 +618,6 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
     this.rappList = uniq.map((n: string) => ({ organoNome: n }));
   }
 
-  /**
-   * ✅ DELETE: manda al BE solo personaId + nome rappresentanza
-   */
   deleteRapp(r: PersonaRappView): void {
     this.errorMsg = '';
     if (!this.isDir) return;
@@ -482,10 +641,10 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
       .pipe(finalize(() => (this.savingRapp = false)))
       .subscribe({
         next: () => {
-          // ✅ aggiorno UI subito (lista tab)
-          this.rappList = this.rappList.filter((x) => x.organoNome.toLowerCase() !== nome.toLowerCase());
+          this.rappList = this.rappList.filter(
+            (x) => x.organoNome.toLowerCase() !== nome.toLowerCase()
+          );
 
-          // ✅ aggiorno anche i badge della card se esistono (così resta coerente dentro la modale)
           const badgeArr = (this.persona as any)?.rappresentanze;
           if (Array.isArray(badgeArr)) {
             (this.persona as any).rappresentanze = badgeArr.filter(
@@ -493,14 +652,14 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
             );
           }
 
-          this.saved.emit(); // il parent può ricaricare la lista staff
+          this.saved.emit();
         },
-        error: (err) =>
-          (this.errorMsg = this.extractApiMessage(err, 'Errore durante la rimozione della rappresentanza.')),
+        error: (err) => {
+          this.errorMsg = this.extractApiMessage(err, 'Errore durante la rimozione della rappresentanza.');
+        },
       });
   }
 
-  // trackBy
   trackByLite(_: number, x: { id: number }): number {
     return x.id;
   }
@@ -509,7 +668,7 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
     return (r?.organoNome ?? '').toLowerCase();
   }
 
-  // ---------------- ANAGRAFICA (solo direttivo) ----------------
+  // ---------------- ANAGRAFICA ----------------
   saveAnagrafica(): void {
     this.errorMsg = '';
 
@@ -526,7 +685,10 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
       id: v.id!,
       nome: v.nome!,
       cognome: v.cognome!,
+      matricola: v.matricola!,
+      numeroTelefono: v.numeroTelefono!,
       email: v.email!,
+      mailUnipa: v.mailUnipa!,
       corsoDiStudiId: v.corsoDiStudiId!,
       annoCorso: v.annoCorso ?? null,
       staff: !!v.staff,
@@ -543,13 +705,15 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
           this.snapshot();
           this.saved.emit();
         },
-        error: (err) => (this.errorMsg = this.extractApiMessage(err, 'Errore durante il salvataggio anagrafica.')),
+        error: (err) => {
+          this.errorMsg = this.extractApiMessage(err, 'Errore durante il salvataggio anagrafica.');
+        },
       });
   }
 
-  // ---------------- RAPP ADD/MOD (rimane com’era) ----------------
+  // ---------------- RAPP FORM ----------------
   editRapp(): void {
-    // con solo nomi non ha senso fare “edit” riga: lasciamo compatibilità ma non lo usiamo
+    // non usato
   }
 
   resetRappForm(markTouched = true): void {
@@ -615,58 +779,30 @@ export class StaffEditModalComponent implements OnInit, OnDestroy, OnChanges {
       .pipe(finalize(() => (this.savingRapp = false)))
       .subscribe({
         next: () => {
-          // ✅ aggiorno subito UI aggiungendo il nome, senza chiamate extra
           const organoNome =
-            this.organiList.find((o) => o.id === organoId)?.nome ??
-            `Organo #${organoId}`;
+            this.organiList.find((o) => o.id === organoId)?.nome ?? `Organo #${organoId}`;
 
-          const exists = this.rappList.some((x) => x.organoNome.toLowerCase() === organoNome.toLowerCase());
+          const exists = this.rappList.some(
+            (x) => x.organoNome.toLowerCase() === organoNome.toLowerCase()
+          );
           if (!exists) {
             this.rappList = [{ organoNome }, ...this.rappList];
           }
 
-          // opzionale: aggiorno anche i badge sulla persona
           const badgeArr = (this.persona as any)?.rappresentanze;
           if (Array.isArray(badgeArr)) {
-            const existsBadge = badgeArr.some((x: any) => String(x ?? '').trim().toLowerCase() === organoNome.toLowerCase());
+            const existsBadge = badgeArr.some(
+              (x: any) => String(x ?? '').trim().toLowerCase() === organoNome.toLowerCase()
+            );
             if (!existsBadge) badgeArr.unshift(organoNome);
           }
 
           this.resetRappForm();
           this.saved.emit();
         },
-        error: (err) => (this.errorMsg = this.extractApiMessage(err, 'Errore durante il salvataggio della rappresentanza.')),
-      });
-  }
-
-  // ---------------- DELETE FOTO ----------------
-  deletePhoto(): void {
-    this.errorMsg = '';
-
-    const personaId = this.form.controls.id.value;
-    if (!personaId) return;
-
-    if (!this.isDir && !this.isSelf()) return;
-
-    const hasPhoto = !!(this.persona?.fotoThumbnailUrl || this.persona?.fotoUrl);
-    if (!hasPhoto) return;
-
-    const ok = confirm('Vuoi davvero eliminare la foto?');
-    if (!ok) return;
-
-    this.savingPhoto = true;
-
-    this.staffSvc
-      .deleteFotoPersona(personaId)
-      .pipe(finalize(() => (this.savingPhoto = false)))
-      .subscribe({
-        next: () => {
-          (this.persona as any).fotoUrl = '';
-          (this.persona as any).fotoThumbnailUrl = '';
-          this.resetCropState();
-          this.saved.emit();
+        error: (err) => {
+          this.errorMsg = this.extractApiMessage(err, 'Errore durante il salvataggio della rappresentanza.');
         },
-        error: (err) => (this.errorMsg = this.extractApiMessage(err, 'Errore durante l’eliminazione della foto.')),
       });
   }
 }
