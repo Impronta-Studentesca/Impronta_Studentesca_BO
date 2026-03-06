@@ -1,0 +1,139 @@
+<section class="page">
+  <div class="head">
+    <div class="left">
+      <div>
+        <h1>Registrazione</h1>
+        <p>Inserisci i tuoi dati e seleziona il corso. Se non lo trovi, puoi proporne uno nuovo.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="error" *ngIf="errorMsg">{{ errorMsg }}</div>
+  <div class="success" *ngIf="successMsg">{{ successMsg }}</div>
+
+  <form class="form" [formGroup]="form" (ngSubmit)="submit()">
+    <label class="field" [class.invalid]="form.controls.nome.touched && form.controls.nome.invalid">
+      <span>Nome</span>
+      <input formControlName="nome" placeholder="Mario"/>
+    </label>
+
+    <label class="field" [class.invalid]="form.controls.cognome.touched && form.controls.cognome.invalid">
+      <span>Cognome</span>
+      <input formControlName="cognome" placeholder="Rossi"/>
+    </label>
+
+    <label class="field" [class.invalid]="form.controls.matricola.touched && form.controls.matricola.invalid">
+      <span>Matricola</span>
+      <input formControlName="matricola" placeholder="0111111" />
+    </label>
+
+    <label class="field" [class.invalid]="form.controls.numeroTelefono.touched && form.controls.numeroTelefono.invalid">
+      <span>Numero di telefono</span>
+      <input formControlName="numeroTelefono" placeholder="3310000000" />
+    </label>
+
+    <label class="field" [class.invalid]="form.controls.email.touched && form.controls.email.invalid">
+    <span>Email personale</span>
+    <input formControlName="email" placeholder="nome.cognome@email.it" />
+    </label>
+
+    <label class="field" [class.invalid]="form.controls.mailUnipa.touched && form.controls.mailUnipa.invalid">
+      <span>Email universitaria</span>
+      <input formControlName="mailUnipa" placeholder="nome.cognome@community.unipa.it" />
+    </label>
+
+    <label class="field" [class.invalid]="form.controls.dipartimentoId.touched && form.controls.dipartimentoId.invalid">
+      <span>Dipartimento</span>
+      <select formControlName="dipartimentoId">
+        <option [ngValue]="null">Seleziona…</option>
+        <option *ngFor="let d of dipList" [ngValue]="d.id">{{ d.nome }} ({{ d.codice }})</option>
+      </select>
+    </label>
+
+    <!-- CORSO (selezione) -->
+    <div class="row" *ngIf="form.controls.dipartimentoId.value">
+      <label
+        class="field grow"
+        [class.invalid]="form.controls.corsoDiStudiId.touched && form.controls.corsoDiStudiId.invalid"
+      >
+        <span>Corso di studi <b> (se non trovi il tuo corso puoi aggiungerlo)</b></span>
+        <select formControlName="corsoDiStudiId" [disabled]="!!corsoDraft">
+          <option [ngValue]="null">Seleziona…</option>
+          <option *ngFor="let c of corsiList" [ngValue]="c.id">
+            {{ c.nome }} • {{ TIPO_CORSO_LABEL[c.tipoCorso] || c.tipoCorso }}
+          </option>
+        </select>
+
+        <small class="hint" *ngIf="corsiLoading">Caricamento corsi…</small>
+        <small class="hint" *ngIf="!corsiLoading && corsiList.length === 0">Nessun corso disponibile.</small>
+      </label>
+
+      <button class="btn btn--primary" type="button" (click)="openCreateCorso()" [disabled]="corsiLoading">
+        + Nuovo corso
+      </button>
+    </div>
+
+    <!-- INFO corso selezionato -->
+    <div class="info" *ngIf="selectedCorso?.tipoCorso as tc">
+      <span class="info__label">Tipo corso</span>
+      <span class="pill">{{ TIPO_CORSO_LABEL[tc] || tc }}</span>
+    </div>
+
+    <!-- INFO corso nuovo (draft) -->
+    <div class="draft" *ngIf="corsoDraft as x">
+      <div class="draft__main">
+        <strong>Corso proposto:</strong> {{ x.nome }}
+        <span class="pill">{{ TIPO_CORSO_LABEL[x.tipoCorso] || x.tipoCorso }}</span>
+      </div>
+      <div class="draft__actions">
+        <button class="btn btn--ghost" type="button" (click)="openCreateCorso()">Modifica</button>
+        <button class="btn btn--danger" type="button" (click)="clearCorsoDraft()">Annulla</button>
+      </div>
+    </div>
+
+    <label class="field">
+      <span>Anno di corso</span>
+      <input type="number" formControlName="annoCorso" min="1" max="10" />
+    </label>
+    <div class="actions">
+      <button class="btn btn--primary" type="submit" [disabled]="loading || corsiLoading || !canSubmit()">
+        {{ loading ? 'Invio…' : 'Registrati' }}
+      </button>
+    </div>
+  </form>
+
+  <!-- MODAL create corso (UI come CorsiComponent) -->
+  <div class="modal" *ngIf="modalOpen">
+    <div class="modal__panel" (click)="$event.stopPropagation()">
+      <div class="modal__head">
+        <h2>Nuovo corso</h2>
+        <button class="x" type="button" (click)="closeModal()">×</button>
+      </div>
+
+      <form class="form" [formGroup]="corsoForm" (ngSubmit)="saveCorsoDraft()">
+        <label class="field">
+          <span>Nome</span>
+          <input formControlName="nome" placeholder="Es. Scienze della Formazione Primaria" />
+        </label>
+
+        <label class="field">
+          <span>Tipo corso</span>
+          <select formControlName="tipoCorso">
+            <option *ngFor="let t of tipoCorsoOptions" [value]="t">
+              {{ TIPO_CORSO_LABEL[t] || t }}
+            </option>
+          </select>
+        </label>
+
+        <div class="modal__actions">
+          <button class="btn btn--ghost" type="button" (click)="closeModal()">Annulla</button>
+          <button class="btn btn--primary" type="submit">
+            Salva
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal__backdrop" (click)="closeModal()"></div>
+  </div>
+</section>
