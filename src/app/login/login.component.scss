@@ -107,8 +107,33 @@
 
 .forgot-row {
   display: flex;
-  justify-content: flex-end;
-  margin-top: -2px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.forgot-row > div:first-child {
+  text-align: left;
+}
+
+.forgot-row > div:last-child {
+  text-align: right;
+}
+
+.link-btn {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--impronta-blue);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
 }
 
 .link-btn {

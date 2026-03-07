@@ -69,6 +69,10 @@ export class LoginComponent {
     this.forgotForm.reset({ email: this.form.value.email?.trim() || '' });
   }
 
+  goToRegister(): void{
+    this.router.navigateByUrl("/register")
+  }
+
   closeForgot(): void {
     this.forgotOpen = false;
   }
