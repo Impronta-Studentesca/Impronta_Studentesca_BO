@@ -64,7 +64,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
     dipartimentoId: [null as number | null, Validators.required],
     corsoDiStudiId: [{ value: null as number | null, disabled: true }, Validators.required],
 
-    annoCorso: [null as number | null],
+    annoCorso: [null as number | null, Validators.required],
     staff: [false],
   });
 

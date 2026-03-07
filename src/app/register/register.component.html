@@ -91,7 +91,8 @@
       </div>
     </div>
 
-    <label class="field">
+    <label class="field grow"
+           [class.invalid]="form.controls.annoCorso.touched && form.controls.annoCorso.invalid">
       <span>Anno di corso</span>
       <input type="number" formControlName="annoCorso" min="1" max="10" />
     </label>
